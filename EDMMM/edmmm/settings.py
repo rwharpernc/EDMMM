@@ -73,6 +73,27 @@ class Configuration:
         config.set(f"{self.plugin_name}.display_cmdr_name", value)
 
     #######################################
+    @property
+    def display_game_mode(self):
+        return config.get_bool(f"{self.plugin_name}.display_game_mode", default=True)
+
+    @display_game_mode.setter
+    def display_game_mode(self, value: bool):
+        config.set(f"{self.plugin_name}.display_game_mode", value)
+
+    #######################################
+    @property
+    def view_mode(self) -> str:
+        """Which panel view is showing: "massacre" or "all". Set by the
+        toggle in the UI itself, not the settings tab, but persisted the
+        same way so it survives EDMC restarts."""
+        return config.get_str(f"{self.plugin_name}.view_mode", default="massacre")
+
+    @view_mode.setter
+    def view_mode(self, value: str):
+        config.set(f"{self.plugin_name}.view_mode", value)
+
+    #######################################
     def __init__(self, plugin_name: str):
         self.plugin_name = plugin_name
         self.config_changed_listeners: list[Callable[["Configuration"], None]] = []
@@ -92,6 +113,8 @@ class Configuration:
             self.display_settlement = data["display_settlement"].get()
         if "display_cmdr_name" in keys:
             self.display_cmdr_name = data["display_cmdr_name"].get()
+        if "display_game_mode" in keys:
+            self.display_game_mode = data["display_game_mode"].get()
 
         for listener in self.config_changed_listeners:
             listener(self)
@@ -140,6 +163,7 @@ def __build_settings_ui(root) -> tk.Frame:
     __setting_changes["display_mission_count"] = tk.IntVar(value=configuration.display_mission_count)
     __setting_changes["display_settlement"] = tk.IntVar(value=configuration.display_settlement)
     __setting_changes["display_cmdr_name"] = tk.IntVar(value=configuration.display_cmdr_name)
+    __setting_changes["display_game_mode"] = tk.IntVar(value=configuration.display_game_mode)
 
     # Padding goes through .grid(), not the widget constructors: nb widgets
     # may be ttk-based depending on EDMC version, and ttk widgets reject
@@ -158,6 +182,8 @@ def __build_settings_ui(root) -> tk.Frame:
                        variable=__setting_changes["display_settlement"]),
         nb.Checkbutton(frame, text="Display Commander Name",
                        variable=__setting_changes["display_cmdr_name"]),
+        nb.Checkbutton(frame, text="Display Game Mode (Solo/Open/Private)",
+                       variable=__setting_changes["display_game_mode"]),
     ]
     for entry in ui_settings_checkboxes:
         entry.grid(columnspan=2, padx=checkbox_offset, sticky=tk.W)

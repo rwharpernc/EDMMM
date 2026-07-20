@@ -19,6 +19,7 @@ import tkinter
 from os.path import basename, dirname
 from typing import Any
 
+import edmmm.game_mode as game_mode
 import edmmm.kill_tracker as kill_tracker
 import edmmm.mission_repository as mission_repository_module
 from edmmm.journal_scan import scan_journals
@@ -43,10 +44,12 @@ def plugin_start3(_plugin_dir: str) -> str:
         mission_repository_module.set_new_repo(scan_result.missions_by_cmdr)
         kill_tracker.initialize(scan_result.bounties_by_cmdr,
                                 scan_result.redirected_by_cmdr)
+        game_mode.initialize(scan_result.mode_by_cmdr, scan_result.group_by_cmdr)
     except Exception:
         logger.exception("Journal scan failed - starting with empty state")
         mission_repository_module.set_new_repo({})
         kill_tracker.initialize({}, {})
+        game_mode.initialize({}, {})
 
     logger.info("Awaiting Missions-Event to build the active mission list")
     return basename(dirname(__file__))
@@ -91,6 +94,13 @@ def journal_entry(cmdr: str, _is_beta: bool, _system: str,
     elif event == "Bounty":
         # Fired for both ship kills and on-foot kills of wanted targets.
         kill_tracker.add_bounty(cmdr, entry)
+
+    elif event == "LoadGame":
+        # Fired once per game session: tells us Solo / Open / Private Group.
+        mode = entry.get("GameMode")
+        if not entry.get("Ship") and not mode or (mode or "").lower() == "cqc":
+            mode = "CQC"
+        game_mode.set_mode(cmdr, mode, entry.get("Group"))
 
 
 def plugin_prefs(parent: Any, _cmdr: str, _is_beta: bool):

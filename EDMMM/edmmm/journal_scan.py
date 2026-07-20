@@ -5,6 +5,7 @@ Collects, per CMDR:
 - MissionAccepted events (all missions; filtering happens later)
 - Bounty events (used to estimate kill progress)
 - MissionRedirected mission IDs (authoritative "objective complete" signal)
+- LoadGame events (game mode: Solo / Open / Private Group)
 """
 import datetime as dt
 import json
@@ -33,9 +34,13 @@ class ScanResult:
     """CMDR -> list of Bounty events, in journal order"""
     redirected_by_cmdr: dict[str, set[int]] = field(default_factory=dict)
     """CMDR -> Mission IDs that received a MissionRedirected event"""
+    mode_by_cmdr: dict[str, str] = field(default_factory=dict)
+    """CMDR -> game mode from their most recent LoadGame event"""
+    group_by_cmdr: dict[str, str] = field(default_factory=dict)
+    """CMDR -> private group name, only set when mode is "Group\""""
 
 
-_RELEVANT_EVENTS = ("Commander", "MissionAccepted", "Bounty", "MissionRedirected")
+_RELEVANT_EVENTS = ("Commander", "MissionAccepted", "Bounty", "MissionRedirected", "LoadGame")
 
 
 def __get_logs_after_timestamp(timestamp: dt.date) -> list[Path]:
@@ -77,6 +82,20 @@ def __scan_one_log(file_path: Path, result: ScanResult):
                     elif event == "MissionRedirected":
                         result.redirected_by_cmdr.setdefault(cmdr, set()).add(
                             line_as_json["MissionID"])
+                    elif event == "LoadGame":
+                        # Mirrors EDMC's own CQC detection: no Ship and no
+                        # GameMode (or GameMode == "CQC") means CQC.
+                        mode = line_as_json.get("GameMode")
+                        if (not line_as_json.get("Ship") and not mode) \
+                                or (mode or "").lower() == "cqc":
+                            mode = "CQC"
+                        if mode:
+                            result.mode_by_cmdr[cmdr] = mode
+                        group = line_as_json.get("Group")
+                        if group:
+                            result.group_by_cmdr[cmdr] = group
+                        else:
+                            result.group_by_cmdr.pop(cmdr, None)
                 except Exception:
                     # Malformed line (bad JSON, missing field, ...) - skip it
                     continue

@@ -1,27 +1,40 @@
 # EDMMM — Elite Dangerous: My Mission Manager
 
 A plugin for [Elite Dangerous Market Connector](https://github.com/EDCD/EDMarketConnector)
-that tracks **massacre missions in space and on the ground** (Odyssey
-settlement massacre and raid missions), including estimated kill progress.
+that tracks **every active mission**, with a dedicated view for **massacre
+missions in space and on the ground** (Odyssey settlement massacre and raid
+missions) that estimates kill progress in detail.
 
 ## Features
 
-- Tracks **ship massacre missions** (`Mission_Massacre*`) *and* **on-foot
-  kill missions**: massacres, settlement raids (`Mission_OnFoot_Onslaught*`),
-  and any other mission with a kill count against a target faction.
-- Space and ground missions are shown as **separate tables**, because ship
-  kills and on-foot kills count toward separate stacks in-game.
-- Per mission-giver faction: required kills, **estimated kills done**, reward
-  in millions of credits (wing-shareable portion in brackets), and a
-  delta-to-highest-stack column.
-- Shows the target settlements for ground missions.
-- Warns when a stack has multiple target factions or target systems.
-- Mission count (x/20) display.
+The panel has two views, click the link in its top-right corner to switch:
+
+- **All Missions** — every currently active mission, of any type: name,
+  giver faction, destination, reward, and time left, soonest-expiring
+  first, so nothing quietly expires unnoticed.
+- **Massacre Stacking** — the detailed kill-progress view:
+  - Tracks **ship massacre missions** (`Mission_Massacre*`) *and* **on-foot
+    kill missions**: massacres, settlement raids (`Mission_OnFoot_Onslaught*`),
+    and any other mission with a kill count against a target faction.
+  - Space and ground missions are shown as **separate tables**, because ship
+    kills and on-foot kills count toward separate stacks in-game.
+  - Per mission-giver faction: required kills, **estimated kills done**,
+    reward in millions of credits (wing-shareable portion in brackets), and
+    a delta-to-highest-stack column.
+  - Shows the target settlements for ground missions.
+  - Warns when a stack has multiple target factions or target systems.
+
+Both views share a header showing:
+
+- The active commander, plus their current **game mode** (Solo / Open /
+  Private Group, with the group's name).
+- Total active mission count (x/20 — the game's own mission cap).
 - **Per-commander profiles**: every mission, kill, and progress figure is
   tracked separately per CMDR. Switching commanders switches the whole view;
   one commander's missions can never bleed into another's.
-- Modern look: commander header, per-faction progress bars, section
-  separators, and right-aligned numeric columns that follow the EDMC theme.
+
+Modern look: per-faction progress bars, section separators, and
+right-aligned numeric columns that follow the EDMC theme.
 
 ## Installation
 
@@ -68,7 +81,7 @@ On startup the plugin reads the last two weeks of journal files to recover
 accepted missions, kills, and completed mission objectives, so state survives
 EDMC restarts.
 
-### How kill progress is estimated
+### How kill progress is estimated (Massacre Stacking view)
 
 - A `MissionRedirected` journal event marks a mission's objective as complete
   (this is authoritative — the game sends it when you have all required kills).
@@ -87,8 +100,12 @@ as the game confirms a mission complete.
 
 The plugin's options tab is in EDMC under **File → Settings → EDMMM**. It
 contains display toggles (kill progress bars, delta column, sum row, mission
-count, settlement list for ground missions, commander name), the plugin
-version, and the location of the plugin's log file.
+count, settlement list for ground missions, commander name, game mode), the
+plugin version, and the location of the plugin's log file.
+
+Which of the two views (All Missions / Massacre Stacking) is showing is
+remembered across EDMC restarts — toggle it from the panel itself, not the
+settings tab.
 
 ## Logging
 
