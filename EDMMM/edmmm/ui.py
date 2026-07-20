@@ -7,9 +7,8 @@ because kill-stacking math doesn't generalize to missions that have no kill
 count - see edmmm/mission_types.py for how a mission lands on a given page.
 
 Visual design notes:
-- All widgets are plain tk (EDMC's theme engine restyles tk widgets); custom
-  accent colors are re-applied AFTER theme.update() via the `_edmmm_fix`
-  attribute so the theme cannot wash them out.
+- All text widgets are plain tk and inherit EDMC's configured theme colors.
+  This is important for accessibility and for custom dark-theme text colors.
 - Kill progress is drawn as small Canvas bars; the drawn rectangles fully
   cover the canvas, so theming the canvas background is irrelevant.
 """
@@ -36,11 +35,10 @@ REFRESH_INTERVAL_MS = 60_000
 """How often the panel re-renders on its own, so mission expiry countdowns
 stay live without waiting for a journal event."""
 
-# Elite-style palette
+# Elite-style palette for non-text graphics only. Text colors are supplied by
+# EDMC so they retain sufficient contrast with the selected theme.
 ACCENT = "#ff8c0d"      # Elite orange
 OK = "#71c837"          # complete / totals
-WARN = "#ffd54f"        # warnings
-MUTED = "#8f9598"       # secondary text
 SEPARATOR = "#5a5f62"
 BAR_TRACK = "#3c4043"
 
@@ -149,23 +147,17 @@ def _get_fonts() -> dict[str, tkfont.Font]:
     return _fonts
 
 
-def _fix(widget, **options):
-    """Schedule color/font options to be re-applied after EDMC themes the
-    frame, so the theme engine cannot override them."""
-    widget._edmmm_fix = options  # noqa - dynamic attribute by design
-    widget.configure(**options)
-    return widget
+def _apply_theme(widget: tk.Widget) -> None:
+    """Theme every nested frame.
 
-
-def _reapply_fixes(widget):
+    EDMC's ``theme.update`` registers an entire subtree but immediately styles
+    only the supplied widget and its direct children. Calling it for nested
+    frames ensures their labels are readable on the first render too.
+    """
+    theme.update(widget)
     for child in widget.winfo_children():
-        fix = getattr(child, "_edmmm_fix", None)
-        if fix:
-            try:
-                child.configure(**fix)
-            except tk.TclError:
-                pass
-        _reapply_fixes(child)
+        if isinstance(child, tk.Frame):
+            _apply_theme(child)
 
 
 def _row_width(settings: GridUiSettings) -> int:
@@ -212,7 +204,7 @@ def _format_destination(mission: mission_state.Mission) -> str:
 
 def _separator(frame: tk.Frame, row: int, width: int, pady: int = 3) -> int:
     sep = tk.Frame(frame, height=1, borderwidth=0)
-    _fix(sep, background=SEPARATOR)
+    sep.configure(background=SEPARATOR)
     sep.grid(row=row, column=0, columnspan=width, sticky="ew", pady=pady)
     return row + 1
 
@@ -235,14 +227,12 @@ def _display_no_data_info(frame: tk.Frame, cmdr: Optional[str]) -> int:
     label = tk.Label(frame, justify=tk.LEFT, wraplength=_WRAP,
                      text=f"No active mission data for {who} yet.\n"
                           "Relog (main menu and back) to sync missions.")
-    _fix(label, foreground=WARN)
     label.grid(column=0, row=0, sticky=tk.W)
     return 1
 
 
 def _display_no_missions(frame: tk.Frame, row: int, text: str) -> int:
     label = tk.Label(frame, text=text)
-    _fix(label, foreground=MUTED)
     label.grid(column=0, columnspan=6, row=row, sticky=tk.W, pady=(2, 0))
     return row + 1
 
@@ -264,12 +254,10 @@ def _display_cmdr_header(frame: tk.Frame, cmdr: Optional[str], count: Optional[i
         if mode_label:
             text += f" — {mode_label}"
         name = tk.Label(frame, text=text, font=_get_fonts()["bold"])
-        _fix(name, foreground=ACCENT)
         name.grid(row=row, column=0, columnspan=max(width - 1, 1), sticky=tk.W)
     if show_count:
         badge = tk.Label(frame, text=f"{count}/{MISSION_CAP}",
                          font=_get_fonts()["small"])
-        _fix(badge, foreground=MUTED)
         badge.grid(row=row, column=max(width - 1, 1), sticky=tk.E)
     return row + 1
 
@@ -286,18 +274,15 @@ def _display_category_nav(frame: tk.Frame, current: str, counts: dict[str, int],
     fonts = _get_fonts()
 
     prev_label = tk.Label(nav, text="◂", font=fonts["small_bold"], cursor="hand2")
-    _fix(prev_label, foreground=ACCENT)
     prev_label.pack(side=tk.LEFT)
     prev_label.bind("<Button-1>", lambda _e: on_prev())
 
     next_label = tk.Label(nav, text="▸", font=fonts["small_bold"], cursor="hand2")
-    _fix(next_label, foreground=ACCENT)
     next_label.pack(side=tk.RIGHT)
     next_label.bind("<Button-1>", lambda _e: on_next())
 
     title_text = f"{mission_types.CATEGORY_LABELS[current]} ({counts.get(current, 0)})"
     title_label = tk.Label(nav, text=title_text, font=fonts["small"])
-    _fix(title_label, foreground=MUTED)
     title_label.pack(side=tk.LEFT, expand=True)
 
     return row + 1
@@ -308,7 +293,6 @@ def _display_header(frame: tk.Frame, settings: GridUiSettings, row: int) -> int:
 
     def head(text):
         label = tk.Label(frame, text=text, font=fonts["small"])
-        _fix(label, foreground=MUTED)
         return label
 
     column = 0
@@ -327,11 +311,7 @@ def _display_header(frame: tk.Frame, settings: GridUiSettings, row: int) -> int:
 
 def _display_row(frame: tk.Frame, faction: str, data: FactionState, mission_data: MassacreData,
                   settings: GridUiSettings, row: int) -> int:
-    complete = data.required > 0 and data.done >= data.required
-
     faction_label = tk.Label(frame, text=faction)
-    if complete and settings.progress:
-        _fix(faction_label, foreground=OK)
 
     column = 0
     faction_label.grid(row=row, column=column, sticky=tk.W, padx=(0, 8))
@@ -346,8 +326,6 @@ def _display_row(frame: tk.Frame, faction: str, data: FactionState, mission_data
         kills_text = str(data.required)
 
     kills_label = tk.Label(frame, text=kills_text)
-    if complete and settings.progress:
-        _fix(kills_label, foreground=OK)
     kills_label.grid(row=row, column=column, sticky=tk.E, padx=(0, 8))
     column += 1
 
@@ -360,7 +338,6 @@ def _display_row(frame: tk.Frame, faction: str, data: FactionState, mission_data
         delta = mission_data.stack_height - data.required
         text = delta if delta > 0 else mission_data.before_stack_height - mission_data.stack_height
         delta_label = tk.Label(frame, text=str(text))
-        _fix(delta_label, foreground=MUTED)
         delta_label.grid(row=row, column=column, sticky=tk.E)
     return row + 1
 
@@ -373,7 +350,6 @@ def _display_sum(frame: tk.Frame, data: MassacreData, settings: GridUiSettings,
 
     def total(text):
         label = tk.Label(frame, text=text, font=fonts["bold"])
-        _fix(label, foreground=OK)
         return label
 
     column = 0
@@ -399,7 +375,6 @@ def _display_settlements(frame: tk.Frame, data: MassacreData, settings: GridUiSe
         return row
     label = tk.Label(frame, text="Settlements: " + ", ".join(data.settlements),
                      wraplength=_WRAP, justify=tk.LEFT, font=_get_fonts()["small"])
-    _fix(label, foreground=MUTED)
     label.grid(column=0, columnspan=_row_width(settings), row=row, sticky=tk.W)
     return row + 1
 
@@ -407,7 +382,6 @@ def _display_settlements(frame: tk.Frame, data: MassacreData, settings: GridUiSe
 def _display_warning(frame: tk.Frame, warning: str, width: int, row: int) -> int:
     label = tk.Label(frame, text="⚠ " + warning, wraplength=_WRAP,
                      justify=tk.LEFT, font=_get_fonts()["small"])
-    _fix(label, foreground=WARN)
     label.grid(column=0, columnspan=width, row=row, sticky=tk.W)
     return row + 1
 
@@ -436,7 +410,6 @@ def _display_all_missions_header(frame: tk.Frame, row: int) -> int:
 
     def head(text, column, sticky):
         label = tk.Label(frame, text=text, font=fonts["small"])
-        _fix(label, foreground=MUTED)
         label.grid(row=row, column=column, sticky=sticky, padx=(0, 8))
 
     head("Mission", 0, tk.W)
@@ -451,8 +424,6 @@ def _display_all_missions_row(frame: tk.Frame, mission: mission_state.Mission,
                                row: int) -> int:
     name_text = f"{mission.name}  ⚠ Illegal" if mission.is_illegal else mission.name
     name_label = tk.Label(frame, text=name_text, wraplength=130, justify=tk.LEFT)
-    if mission.is_illegal:
-        _fix(name_label, foreground=WARN)
     name_label.grid(row=row, column=0, sticky=tk.W, padx=(0, 8))
 
     faction_label = tk.Label(frame, text=mission.source_faction, wraplength=100,
@@ -467,9 +438,9 @@ def _display_all_missions_row(frame: tk.Frame, mission: mission_state.Mission,
     tk.Label(frame, text=reward_text).grid(row=row, column=3, sticky=tk.E, padx=(0, 8))
 
     expiry_text, urgent = _format_expiry(mission.expiry)
-    expiry_label = tk.Label(frame, text=expiry_text)
     if urgent:
-        _fix(expiry_label, foreground=WARN)
+        expiry_text = "⚠ " + expiry_text
+    expiry_label = tk.Label(frame, text=expiry_text)
     expiry_label.grid(row=row, column=4, sticky=tk.E)
 
     return row + 1
@@ -594,9 +565,7 @@ class UI:
                                         self.__prev_category, self.__next_category)
             self.__render_current_page(self.__frame, row)
 
-        theme.update(self.__frame)
-        # Re-apply accent colors the theme engine may have overridden
-        _reapply_fixes(self.__frame)
+        _apply_theme(self.__frame)
 
 
 ui = UI()
