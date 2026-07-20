@@ -1,0 +1,43 @@
+name: Release
+
+# Push a tag like v1.2.3 to build the plugin zip and publish a GitHub Release.
+# The version in that tag must match EDMMM/version exactly (see the check
+# below) so the release name/asset and the plugin's own "About" label never
+# drift apart.
+on:
+  push:
+    tags:
+      - "v*.*.*"
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+
+      - name: Verify tag matches EDMMM/version
+        run: |
+          tag_version="${GITHUB_REF_NAME#v}"
+          file_version="$(cat EDMMM/version)"
+          if [ "$tag_version" != "$file_version" ]; then
+            echo "::error::Tag v$tag_version does not match EDMMM/version ($file_version)"
+            exit 1
+          fi
+
+      - name: Build release zip
+        run: python scripts/build.py
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/EDMMM-v*.zip
+          generate_release_notes: true

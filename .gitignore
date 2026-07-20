@@ -1,0 +1,19 @@
+# Build output — regenerate with scripts/build.ps1 (or the release workflow)
+dist/
+
+# Runtime artifacts the plugin writes next to itself when EDMC runs it
+EDMMM/logs/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+
+# Editor / OS cruft
+.idea/
+.vscode/
+*.swp
+.DS_Store
+Thumbs.db
