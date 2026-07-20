@@ -133,3 +133,12 @@ inspected without digging through EDMC's log directory.
 
 The plugin reads your Elite Dangerous journal files (last 2 weeks) on startup.
 It makes no web calls.
+
+## Acknowledgements
+
+Inspired by [EDMC-Massacres](https://github.com/CMDR-WDX/EDMC-Massacres) by
+CMDR-WDX. Mission-category classification is based on the taxonomy in
+[EDDI](https://github.com/EDCD/EDDI)'s `MissionType.cs`. Built against
+[EDMarketConnector](https://github.com/EDCD/EDMarketConnector). Also
+referenced: [Inara](https://inara.cz/elite/), [Spansh](https://www.spansh.co.uk/),
+and [EDSM](https://www.edsm.net/).

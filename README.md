@@ -127,6 +127,23 @@ document — if you spot a mission landing in the wrong category, it's
 almost always a missing hint string, not a logic bug. PRs adding hints for
 mission types we don't recognize yet are especially welcome.
 
+## Acknowledgements
+
+EDMMM builds on ideas, data, and prior art from the wider Elite Dangerous
+community:
+
+- [EDMC-Massacres](https://github.com/CMDR-WDX/EDMC-Massacres) by CMDR-WDX —
+  the original massacre-mission tracker that inspired this project.
+- [EDDI](https://github.com/EDCD/EDDI) — its `MissionType.cs` is the
+  reference used to build EDMMM's mission-category classifier
+  (`mission_types.py`).
+- [EDMarketConnector](https://github.com/EDCD/EDMarketConnector) (EDMC) —
+  the host application this is a plugin for; its own source was also
+  consulted for journal field names and Linux/Flatpak installation details.
+- [Inara](https://inara.cz/elite/), [Spansh](https://www.spansh.co.uk/), and
+  [EDSM](https://www.edsm.net/) — Elite Dangerous community data and tools
+  referenced for game data and conventions.
+
 ## License
 
 GPL-3.0 — see [LICENSE](LICENSE).
