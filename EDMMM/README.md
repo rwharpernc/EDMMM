@@ -25,15 +25,36 @@ settlement massacre and raid missions), including estimated kill progress.
 
 ## Installation
 
-1. Download the latest `EDMMM-vX.Y.Z.zip` from the
-   [Releases page](https://github.com/rwharpernc/EDMMM/releases).
-2. Open EDMC → File → Settings → Plugins tab → *Open* the plugins folder
+Download the latest `EDMMM-vX.Y.Z.zip` from the
+[Releases page](https://github.com/rwharpernc/EDMMM/releases). In all cases:
+unzip it, copy the whole `EDMMM` folder into EDMC's plugins folder, delete
+any older copy of the plugin first if one exists, then restart EDMC.
+
+### Windows (Steam, Frontier launcher, or Epic)
+
+The journal location and EDMC's plugins folder are the same regardless of
+storefront:
+
+1. Open EDMC → File → Settings → Plugins tab → *Open* the plugins folder
    (usually `%LOCALAPPDATA%\EDMarketConnector\plugins`).
-3. Unzip the release and copy the whole `EDMMM` folder into that plugins
-   folder.
-4. If an older copy of the plugin is already present, delete it first —
-   two copies of the plugin must not run at the same time.
-5. Restart EDMC.
+2. Copy the `EDMMM` folder there and restart EDMC.
+
+### Linux (Steam / Proton)
+
+Elite Dangerous has no native Linux client, so this assumes you're running
+it via Steam Play (Proton). EDMC likewise has no native Linux build — run it
+via its [Flatpak on Flathub](https://flathub.org/apps/io.edcd.EDMarketConnector)
+(easiest) or under Wine.
+
+1. If EDMC doesn't auto-detect your journal files, point it at
+   `~/.steam/steam/steamapps/compatdata/359320/pfx/drive_c/users/steamuser/Saved Games/Frontier Developments/Elite Dangerous`
+   via File → Settings → Configuration.
+2. Open EDMC → File → Settings → Plugins tab → *Open* the plugins folder.
+   Use that button rather than a hardcoded path — a Flatpak install keeps
+   plugins inside its sandboxed data directory
+   (`~/.var/app/io.edcd.EDMarketConnector/...`), not the
+   `~/.local/share/EDMarketConnector/plugins` a Wine/source install uses.
+3. Copy the `EDMMM` folder there and restart EDMC.
 
 The plugin's settings tab appears in File → Settings under "EDMMM".
 

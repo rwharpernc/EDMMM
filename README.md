@@ -32,15 +32,42 @@ per commander, per mission-giver faction.
 
 ## Installation
 
-1. Grab the latest `EDMMM-vX.Y.Z.zip` from the
-   [Releases page](https://github.com/rwharpernc/EDMMM/releases/latest).
-2. In EDMC: File → Settings → Plugins tab → *Open* the plugins folder
-   (usually `%LOCALAPPDATA%\EDMarketConnector\plugins`).
-3. Unzip the release and copy the whole `EDMMM` folder into that plugins
-   folder.
-4. Restart EDMC.
+Grab the latest `EDMMM-vX.Y.Z.zip` from the
+[Releases page](https://github.com/rwharpernc/EDMMM/releases/latest), then
+follow the steps for your platform below. In all cases: unzip the release,
+copy the whole `EDMMM` folder into EDMC's plugins folder, delete any older
+copy of the plugin first if one exists, then restart EDMC. The settings tab
+then appears under File → Settings → **EDMMM**.
 
-The settings tab appears under File → Settings → **EDMMM**.
+### Windows (Steam, Frontier launcher, or Epic)
+
+Elite Dangerous always writes its journal to the same place on Windows
+regardless of which storefront it was installed from, and EDMC's plugins
+folder is likewise storefront-independent — so installation is identical
+across Steam, the Frontier launcher, and Epic:
+
+1. In EDMC: File → Settings → Plugins tab → *Open* the plugins folder
+   (usually `%LOCALAPPDATA%\EDMarketConnector\plugins`).
+2. Copy the `EDMMM` folder there and restart EDMC.
+
+### Linux (Steam / Proton)
+
+Elite Dangerous itself isn't natively supported on Linux, so this assumes
+you're running it through Steam Play (Proton) — EDMC has no native Linux
+build either, so run it via its
+[Flatpak on Flathub](https://flathub.org/apps/io.edcd.EDMarketConnector) (the
+easiest route) or under Wine.
+
+1. Make sure EDMC can see your journal files. Under Proton, they live at
+   `~/.steam/steam/steamapps/compatdata/359320/pfx/drive_c/users/steamuser/Saved Games/Frontier Developments/Elite Dangerous`.
+   If EDMC doesn't find them automatically, set that path explicitly in
+   EDMC's File → Settings → Configuration tab.
+2. Open EDMC's plugins folder from File → Settings → Plugins tab → *Open* —
+   use the *button*, not a hardcoded path: a Flatpak install keeps it inside
+   the app's sandboxed data directory (under `~/.var/app/io.edcd.EDMarketConnector/`),
+   not the `~/.local/share/EDMarketConnector/plugins` used by a Wine/source
+   install, and the button always opens the right one.
+3. Copy the `EDMMM` folder there and restart EDMC.
 
 See [EDMMM/README.md](EDMMM/README.md) for full usage docs (how kill
 progress is estimated, settings, and logging) — that copy ships inside the
