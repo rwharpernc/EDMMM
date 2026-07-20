@@ -8,17 +8,19 @@ match `EDMMM/version` and the git tag each release is built from.
 
 Initial release.
 
-- **All Missions view**: tracks every active mission of any type — name,
-  giver faction, destination, reward, and time to expiry, soonest first.
-- **Massacre Stacking view**: ship massacre missions and on-foot kill
-  missions (settlement massacres/raids) with estimated kill progress, shown
-  as separate space/ground tables since kills stack independently. Per
-  mission-giver faction: required kills, estimated kills done, reward (with
-  wing-shareable portion), and a delta-to-highest-stack column. Target
-  settlements for ground missions; warnings for stacks spanning multiple
-  factions or systems.
-- The two views are toggled from a link on the panel; the choice persists
-  across restarts.
+- Tracks every active mission of any type, classified into 7 category pages
+  you page through with ◂ / ▸ on the panel (empty categories are skipped):
+  1. **Massacre (Space)** and 2. **Settlement Raids (Ground)** — detailed
+     kill-progress views, kept separate since ship and on-foot kills stack
+     independently. Per mission-giver faction: required kills, estimated
+     kills done, reward (with wing-shareable portion), and a
+     delta-to-highest-stack column. Target settlements and multi-faction/
+     multi-system warnings on the Ground page.
+  3. **Combat**, 4. **Trade & Mining**, 5. **Passenger**, 6. **Covert /
+     On-Foot Ops**, 7. **Other** — every other mission type, listed with
+     giver faction, destination, reward, and time to expiry, soonest first.
+     Missions the game flags illegal are marked wherever they land.
+- The current page persists across restarts.
 - Header shows the active commander, their game mode (Solo / Open / Private
   Group, with group name), and total active missions against the game's
   20-mission cap.

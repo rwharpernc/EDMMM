@@ -7,24 +7,41 @@ missions) that estimates kill progress in detail.
 
 ## Features
 
-The panel has two views, click the link in its top-right corner to switch:
+The panel is a set of **category pages** — click ◂ / ▸ to page between them
+(empty categories are skipped automatically):
 
-- **All Missions** — every currently active mission, of any type: name,
-  giver faction, destination, reward, and time left, soonest-expiring
-  first, so nothing quietly expires unnoticed.
-- **Massacre Stacking** — the detailed kill-progress view:
-  - Tracks **ship massacre missions** (`Mission_Massacre*`) *and* **on-foot
-    kill missions**: massacres, settlement raids (`Mission_OnFoot_Onslaught*`),
-    and any other mission with a kill count against a target faction.
-  - Space and ground missions are shown as **separate tables**, because ship
-    kills and on-foot kills count toward separate stacks in-game.
-  - Per mission-giver faction: required kills, **estimated kills done**,
-    reward in millions of credits (wing-shareable portion in brackets), and
-    a delta-to-highest-stack column.
-  - Shows the target settlements for ground missions.
-  - Warns when a stack has multiple target factions or target systems.
+1. **Massacre (Space)** and **2. Settlement Raids (Ground)** — the detailed
+   kill-progress views, kept separate because ship kills and on-foot kills
+   count toward separate stacks in-game:
+   - Tracks **ship massacre missions** (`Mission_Massacre*`) *and* **on-foot
+     kill missions**: massacres and settlement raids
+     (`Mission_OnFoot_Onslaught*`), or any other mission with a kill count
+     against a target faction.
+   - Per mission-giver faction: required kills, **estimated kills done**,
+     reward in millions of credits (wing-shareable portion in brackets), and
+     a delta-to-highest-stack column.
+   - The Ground page also shows the target settlements.
+   - Warns when a stack has multiple target factions or target systems.
+3. **Combat** — assassinations, megaship disables, skimmer clearing, and
+   other non-massacre combat missions.
+4. **Trade & Mining** — delivery, courier, collection, mining, and salvage
+   missions.
+5. **Passenger** — VIP, bulk, sightseeing, and evacuation passenger runs.
+6. **Covert / On-Foot Ops** — hacking, sabotage, heists, and other on-foot
+   missions that aren't settlement raids.
+7. **Other** — everything that doesn't fit the above.
 
-Both views share a header showing:
+Pages 3–7 are a plain list: mission name, giver faction, destination,
+reward, and time left, soonest-expiring first. Missions flagged **illegal**
+by the game (smuggling, illegal cargo, etc.) are marked wherever they land,
+since illegality cuts across types rather than being its own category.
+Mission-type detection is name-based (the game doesn't expose a clean type
+field), so a handful of obscure or new mission types may land in *Other*
+until their naming pattern is added.
+
+The current page is remembered across EDMC restarts.
+
+The header shows:
 
 - The active commander, plus their current **game mode** (Solo / Open /
   Private Group, with the group's name).
@@ -81,7 +98,7 @@ On startup the plugin reads the last two weeks of journal files to recover
 accepted missions, kills, and completed mission objectives, so state survives
 EDMC restarts.
 
-### How kill progress is estimated (Massacre Stacking view)
+### How kill progress is estimated (Massacre / Settlement Raids pages)
 
 - A `MissionRedirected` journal event marks a mission's objective as complete
   (this is authoritative — the game sends it when you have all required kills).
@@ -103,9 +120,8 @@ contains display toggles (kill progress bars, delta column, sum row, mission
 count, settlement list for ground missions, commander name, game mode), the
 plugin version, and the location of the plugin's log file.
 
-Which of the two views (All Missions / Massacre Stacking) is showing is
-remembered across EDMC restarts — toggle it from the panel itself, not the
-settings tab.
+Which category page is showing is remembered across EDMC restarts — page
+through them with ◂ / ▸ on the panel itself, not the settings tab.
 
 ## Logging
 

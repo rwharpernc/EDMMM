@@ -1,12 +1,10 @@
 """
-Renders EDMMM's panel in EDMC's main window: either the massacre
-kill-stacking tables, or a general "All Missions" list covering every active
-mission of any type - the two are toggled, not merged, since kill-stacking
-math doesn't generalize to missions that have no kill count.
-
-Space and ground missions are shown as separate sections in the massacre
-view because ship kills and on-foot kills count toward separate mission
-stacks in-game.
+Renders EDMMM's panel in EDMC's main window as a set of category pages you
+scroll between with the ◂ / ▸ nav: two detailed kill-stacking pages
+(Massacre Space, Settlement Raids Ground) plus a handful of general pages
+covering every other mission type. Pages are separate rather than merged
+because kill-stacking math doesn't generalize to missions that have no kill
+count - see edmmm/mission_types.py for how a mission lands on a given page.
 
 Visual design notes:
 - All widgets are plain tk (EDMC's theme engine restyles tk widgets); custom
@@ -25,6 +23,7 @@ from theme import theme
 
 import edmmm.game_mode as game_mode
 import edmmm.mission_state as mission_state
+import edmmm.mission_types as mission_types
 import edmmm.settings
 from edmmm import kill_tracker
 from edmmm.logger_factory import logger
@@ -35,7 +34,7 @@ from edmmm.settings import Configuration
 MISSION_CAP = 20
 REFRESH_INTERVAL_MS = 60_000
 """How often the panel re-renders on its own, so mission expiry countdowns
-in the All Missions view stay live without waiting for a journal event."""
+stay live without waiting for a journal event."""
 
 # Elite-style palette
 ACCENT = "#ff8c0d"      # Elite orange
@@ -53,6 +52,8 @@ _ALL_MISSIONS_ROW_WIDTH = 5
 _URGENT_EXPIRY_MINUTES = 120
 """Below this many minutes left, a mission's expiry is shown as a warning."""
 
+_MASSACRE_CATEGORIES = (mission_types.MASSACRE_SPACE, mission_types.MASSACRE_GROUND)
+
 
 @dataclass
 class FactionState:
@@ -62,81 +63,60 @@ class FactionState:
     shareable_reward: int = 0
 
 
-@dataclass
-class GroupData:
-    """One section: either all space missions or all ground missions."""
-    label: str
-    faction_rows: dict[str, FactionState] = field(default_factory=dict)
-    stack_height: int = 0
-    before_stack_height: int = 0
-    target_factions: list[str] = field(default_factory=list)
-    target_systems: list[str] = field(default_factory=list)
-    settlements: list[str] = field(default_factory=list)
-    warnings: list[str] = field(default_factory=list)
-    reward: int = 0
-    shareable_reward: int = 0
-
-
 class MassacreData:
     """
-    Data view computed from the massacre mission store, split by arena
-    (space / ground) and aggregated per mission-giver faction.
+    Kill-stacking data for ONE arena (space or ground - the caller already
+    filtered), aggregated per mission-giver faction.
     """
 
-    def __init__(self, massacre_state: dict[int, MassacreMission]):
-        missions = list(massacre_state.values())
-        progress = compute_progress(missions)
+    def __init__(self, missions: list[MassacreMission]):
         self.mission_count = len(missions)
-        self.groups: list[GroupData] = []
+        self.faction_rows: dict[str, FactionState] = {}
+        self.stack_height = 0
+        self.before_stack_height = 0
+        self.target_factions: list[str] = []
+        self.target_systems: list[str] = []
+        self.settlements: list[str] = []
+        self.warnings: list[str] = []
+        self.reward = 0
+        self.shareable_reward = 0
 
-        for is_ground, label in ((False, "Space"), (True, "Ground")):
-            group_missions = [m for m in missions if m.is_ground == is_ground]
-            if not group_missions:
-                continue
-            self.groups.append(self.__build_group(label, group_missions, progress))
-
-    @staticmethod
-    def __build_group(label: str, missions: list[MassacreMission],
-                      progress: dict[int, int]) -> GroupData:
-        group = GroupData(label)
-
+        progress = compute_progress(missions)
         for mission in missions:
-            state = group.faction_rows.setdefault(mission.source_faction, FactionState())
+            state = self.faction_rows.setdefault(mission.source_faction, FactionState())
             state.required += mission.count
             state.done += progress.get(mission.id, 0)
             state.reward += mission.reward
             if mission.is_wing:
                 state.shareable_reward += mission.reward
 
-            if mission.target_faction not in group.target_factions:
-                group.target_factions.append(mission.target_faction)
-            if mission.target_system not in group.target_systems:
-                group.target_systems.append(mission.target_system)
-            if mission.target_settlement and mission.target_settlement not in group.settlements:
-                group.settlements.append(mission.target_settlement)
+            if mission.target_faction not in self.target_factions:
+                self.target_factions.append(mission.target_faction)
+            if mission.target_system not in self.target_systems:
+                self.target_systems.append(mission.target_system)
+            if mission.target_settlement and mission.target_settlement not in self.settlements:
+                self.settlements.append(mission.target_settlement)
 
-        for state in group.faction_rows.values():
-            group.reward += state.reward
-            group.shareable_reward += state.shareable_reward
-            if state.required > group.stack_height:
-                group.stack_height = state.required
+        for state in self.faction_rows.values():
+            self.reward += state.reward
+            self.shareable_reward += state.shareable_reward
+            if state.required > self.stack_height:
+                self.stack_height = state.required
 
         # Second-highest stack, used for the delta column of the top stack
-        for state in group.faction_rows.values():
-            if state.required != group.stack_height \
-                    and state.required > group.before_stack_height:
-                group.before_stack_height = state.required
-        if group.before_stack_height == 0:
-            group.before_stack_height = group.stack_height
+        for state in self.faction_rows.values():
+            if state.required != self.stack_height \
+                    and state.required > self.before_stack_height:
+                self.before_stack_height = state.required
+        if self.before_stack_height == 0:
+            self.before_stack_height = self.stack_height
 
-        if len(group.target_factions) > 1:
-            group.warnings.append(
-                f"Multiple target factions: {', '.join(group.target_factions)}")
-        if len(group.target_systems) > 1:
-            group.warnings.append(
-                f"Multiple target systems: {', '.join(group.target_systems)}")
-
-        return group
+        if len(self.target_factions) > 1:
+            self.warnings.append(
+                f"Multiple target factions: {', '.join(self.target_factions)}")
+        if len(self.target_systems) > 1:
+            self.warnings.append(
+                f"Multiple target systems: {', '.join(self.target_systems)}")
 
 
 class GridUiSettings:
@@ -294,24 +274,33 @@ def _display_cmdr_header(frame: tk.Frame, cmdr: Optional[str], count: Optional[i
     return row + 1
 
 
-def _display_view_toggle(frame: tk.Frame, view_mode: str, width: int, row: int,
-                          on_click) -> int:
-    text = "All Missions ▸" if view_mode == "massacre" else "Massacre Stacking ▸"
-    label = tk.Label(frame, text=text, font=_get_fonts()["small"], cursor="hand2")
-    _fix(label, foreground=ACCENT)
-    label.grid(row=row, column=0, columnspan=width, sticky=tk.E, pady=(0, 4))
-    label.bind("<Button-1>", lambda _e: on_click())
+def _display_category_nav(frame: tk.Frame, current: str, counts: dict[str, int],
+                          width: int, row: int, on_prev, on_next) -> int:
+    """◂ Category Name (count) ▸ - click either arrow to page between the
+    panel's category pages. Built in its own pack()-managed sub-frame so the
+    three pieces (prev / title / next) can sit left / middle / right without
+    fighting the outer grid's column widths."""
+    nav = tk.Frame(frame)
+    nav.grid(row=row, column=0, columnspan=width, sticky="ew", pady=(0, 4))
+
+    fonts = _get_fonts()
+
+    prev_label = tk.Label(nav, text="◂", font=fonts["small_bold"], cursor="hand2")
+    _fix(prev_label, foreground=ACCENT)
+    prev_label.pack(side=tk.LEFT)
+    prev_label.bind("<Button-1>", lambda _e: on_prev())
+
+    next_label = tk.Label(nav, text="▸", font=fonts["small_bold"], cursor="hand2")
+    _fix(next_label, foreground=ACCENT)
+    next_label.pack(side=tk.RIGHT)
+    next_label.bind("<Button-1>", lambda _e: on_next())
+
+    title_text = f"{mission_types.CATEGORY_LABELS[current]} ({counts.get(current, 0)})"
+    title_label = tk.Label(nav, text=title_text, font=fonts["small"])
+    _fix(title_label, foreground=MUTED)
+    title_label.pack(side=tk.LEFT, expand=True)
+
     return row + 1
-
-
-def _display_group_title(frame: tk.Frame, group: GroupData, settings: GridUiSettings,
-                          row: int) -> int:
-    label = tk.Label(frame, text=group.label.upper(),
-                     font=_get_fonts()["small_bold"])
-    _fix(label, foreground=ACCENT)
-    label.grid(column=0, columnspan=_row_width(settings), row=row,
-               sticky=tk.W, pady=(5, 0))
-    return _separator(frame, row + 1, _row_width(settings), pady=1)
 
 
 def _display_header(frame: tk.Frame, settings: GridUiSettings, row: int) -> int:
@@ -336,7 +325,7 @@ def _display_header(frame: tk.Frame, settings: GridUiSettings, row: int) -> int:
     return row + 1
 
 
-def _display_row(frame: tk.Frame, faction: str, data: FactionState, group: GroupData,
+def _display_row(frame: tk.Frame, faction: str, data: FactionState, mission_data: MassacreData,
                   settings: GridUiSettings, row: int) -> int:
     complete = data.required > 0 and data.done >= data.required
 
@@ -368,19 +357,19 @@ def _display_row(frame: tk.Frame, faction: str, data: FactionState, group: Group
     column += 1
 
     if settings.delta:
-        delta = group.stack_height - data.required
-        text = delta if delta > 0 else group.before_stack_height - group.stack_height
+        delta = mission_data.stack_height - data.required
+        text = delta if delta > 0 else mission_data.before_stack_height - mission_data.stack_height
         delta_label = tk.Label(frame, text=str(text))
         _fix(delta_label, foreground=MUTED)
         delta_label.grid(row=row, column=column, sticky=tk.E)
     return row + 1
 
 
-def _display_sum(frame: tk.Frame, group: GroupData, settings: GridUiSettings,
+def _display_sum(frame: tk.Frame, data: MassacreData, settings: GridUiSettings,
                   row: int) -> int:
     row = _separator(frame, row, _row_width(settings), pady=2)
     fonts = _get_fonts()
-    done_sum = sum(s.done for s in group.faction_rows.values())
+    done_sum = sum(s.done for s in data.faction_rows.values())
 
     def total(text):
         label = tk.Label(frame, text=text, font=fonts["bold"])
@@ -391,25 +380,24 @@ def _display_sum(frame: tk.Frame, group: GroupData, settings: GridUiSettings,
     total("Sum").grid(row=row, column=column, sticky=tk.W, padx=(0, 8))
     column += 1
     if settings.progress:
-        bar = _progress_bar(frame, min(done_sum, group.stack_height),
-                             group.stack_height)
+        bar = _progress_bar(frame, min(done_sum, data.stack_height), data.stack_height)
         bar.grid(row=row, column=column, padx=(0, 8))
         column += 1
-        kills_text = f"{min(done_sum, group.stack_height)}/{group.stack_height}"
+        kills_text = f"{min(done_sum, data.stack_height)}/{data.stack_height}"
     else:
-        kills_text = str(group.stack_height)
+        kills_text = str(data.stack_height)
     total(kills_text).grid(row=row, column=column, sticky=tk.E, padx=(0, 8))
     column += 1
-    reward_text = f"{_fmt_millions(group.reward)} ({_fmt_millions(group.shareable_reward)})"
+    reward_text = f"{_fmt_millions(data.reward)} ({_fmt_millions(data.shareable_reward)})"
     total(reward_text).grid(row=row, column=column, sticky=tk.E, padx=(0, 8))
     return row + 1
 
 
-def _display_settlements(frame: tk.Frame, group: GroupData, settings: GridUiSettings,
+def _display_settlements(frame: tk.Frame, data: MassacreData, settings: GridUiSettings,
                           row: int) -> int:
-    if not group.settlements:
+    if not data.settlements:
         return row
-    label = tk.Label(frame, text="Settlements: " + ", ".join(group.settlements),
+    label = tk.Label(frame, text="Settlements: " + ", ".join(data.settlements),
                      wraplength=_WRAP, justify=tk.LEFT, font=_get_fonts()["small"])
     _fix(label, foreground=MUTED)
     label.grid(column=0, columnspan=_row_width(settings), row=row, sticky=tk.W)
@@ -425,23 +413,20 @@ def _display_warning(frame: tk.Frame, warning: str, width: int, row: int) -> int
 
 
 def _display_massacre_data(frame: tk.Frame, data: MassacreData, settings: GridUiSettings,
-                           row: int) -> int:
+                           row: int, no_missions_text: str) -> int:
     width = _row_width(settings)
     if data.mission_count == 0:
-        return _display_no_missions(frame, row, "No massacre missions on the board.")
+        return _display_no_missions(frame, row, no_missions_text)
 
-    for group in data.groups:
-        row = _display_group_title(frame, group, settings, row)
-        row = _display_header(frame, settings, row)
-        for faction in sorted(group.faction_rows.keys()):
-            row = _display_row(frame, faction, group.faction_rows[faction], group,
-                                settings, row)
-        if settings.sum:
-            row = _display_sum(frame, group, settings, row)
-        if settings.settlement and group.label == "Ground":
-            row = _display_settlements(frame, group, settings, row)
-        for warning in group.warnings:
-            row = _display_warning(frame, warning, width, row)
+    row = _display_header(frame, settings, row)
+    for faction in sorted(data.faction_rows.keys()):
+        row = _display_row(frame, faction, data.faction_rows[faction], data, settings, row)
+    if settings.sum:
+        row = _display_sum(frame, data, settings, row)
+    if settings.settlement:
+        row = _display_settlements(frame, data, settings, row)
+    for warning in data.warnings:
+        row = _display_warning(frame, warning, width, row)
 
     return row
 
@@ -464,7 +449,10 @@ def _display_all_missions_header(frame: tk.Frame, row: int) -> int:
 
 def _display_all_missions_row(frame: tk.Frame, mission: mission_state.Mission,
                                row: int) -> int:
-    name_label = tk.Label(frame, text=mission.name, wraplength=130, justify=tk.LEFT)
+    name_text = f"{mission.name}  ⚠ Illegal" if mission.is_illegal else mission.name
+    name_label = tk.Label(frame, text=name_text, wraplength=130, justify=tk.LEFT)
+    if mission.is_illegal:
+        _fix(name_label, foreground=WARN)
     name_label.grid(row=row, column=0, sticky=tk.W, padx=(0, 8))
 
     faction_label = tk.Label(frame, text=mission.source_faction, wraplength=100,
@@ -488,9 +476,9 @@ def _display_all_missions_row(frame: tk.Frame, mission: mission_state.Mission,
 
 
 def _display_all_missions(frame: tk.Frame, missions: dict[int, mission_state.Mission],
-                          row: int) -> int:
+                          row: int, no_missions_text: str) -> int:
     if not missions:
-        return _display_no_missions(frame, row, "No active missions.")
+        return _display_no_missions(frame, row, no_missions_text)
 
     row = _display_all_missions_header(frame, row)
     # Soonest-to-expire first; missions with no expiry sort last.
@@ -503,10 +491,12 @@ def _display_all_missions(frame: tk.Frame, missions: dict[int, mission_state.Mis
 class UI:
     def __init__(self):
         self.__frame: Optional[tk.Frame] = None
-        self.__massacre_data: Optional[MassacreData] = None
+        self.__massacre_missions: Optional[dict[int, MassacreMission]] = None
         self.__all_missions_data: Optional[dict[int, mission_state.Mission]] = None
         self.__settings = GridUiSettings(edmmm.settings.configuration)
-        self.__view_mode = edmmm.settings.configuration.view_mode
+        self.__current_category = edmmm.settings.configuration.current_category
+        if self.__current_category not in mission_types.CATEGORY_ORDER:
+            self.__current_category = mission_types.CATEGORY_ORDER[0]
         edmmm.settings.configuration.config_changed_listeners.append(
             self.rebuild_settings)
 
@@ -531,18 +521,58 @@ class UI:
         self.update_ui()
         self.__frame.after(REFRESH_INTERVAL_MS, self.__tick)
 
-    def __toggle_view(self):
-        self.__view_mode = "all" if self.__view_mode == "massacre" else "massacre"
-        edmmm.settings.configuration.view_mode = self.__view_mode
+    def __category_counts(self) -> dict[str, int]:
+        counts = {key: 0 for key in mission_types.CATEGORY_ORDER}
+        for mission in (self.__massacre_missions or {}).values():
+            key = mission_types.MASSACRE_GROUND if mission.is_ground else mission_types.MASSACRE_SPACE
+            counts[key] += 1
+        for mission in (self.__all_missions_data or {}).values():
+            if mission.category not in _MASSACRE_CATEGORIES:
+                counts[mission.category] += 1
+        return counts
+
+    def __step_category(self, direction: int):
+        counts = self.__category_counts()
+        order = mission_types.CATEGORY_ORDER
+        if not any(counts.values()):
+            return  # nothing anywhere to page to - stay put
+        idx = order.index(self.__current_category)
+        for _ in range(len(order)):
+            idx = (idx + direction) % len(order)
+            if counts[order[idx]] > 0:
+                break
+        self.__current_category = order[idx]
+        edmmm.settings.configuration.current_category = self.__current_category
         self.update_ui()
 
-    def notify_about_new_massacre_mission_state(self, data: Optional[MassacreData]):
-        self.__massacre_data = data
+    def __prev_category(self):
+        self.__step_category(-1)
+
+    def __next_category(self):
+        self.__step_category(1)
+
+    def notify_about_new_massacre_mission_state(self, data: Optional[dict[int, MassacreMission]]):
+        self.__massacre_missions = data
         self.update_ui()
 
     def notify_about_new_mission_state(self, data: Optional[dict[int, mission_state.Mission]]):
         self.__all_missions_data = data
         self.update_ui()
+
+    def __render_current_page(self, frame: tk.Frame, row: int) -> int:
+        category = self.__current_category
+        no_missions_text = f"No {mission_types.CATEGORY_LABELS[category].lower()} missions on the board."
+
+        if category in _MASSACRE_CATEGORIES:
+            want_ground = category == mission_types.MASSACRE_GROUND
+            missions = [m for m in (self.__massacre_missions or {}).values()
+                       if m.is_ground == want_ground]
+            data = MassacreData(missions)
+            return _display_massacre_data(frame, data, self.__settings, row, no_missions_text)
+
+        missions = {mid: m for mid, m in (self.__all_missions_data or {}).items()
+                   if m.category == category}
+        return _display_all_missions(frame, missions, row, no_missions_text)
 
     def update_ui(self):
         if self.__frame is None:
@@ -559,13 +589,10 @@ class UI:
             total = len(self.__all_missions_data)
             row = _display_cmdr_header(self.__frame, kill_tracker.current_cmdr,
                                         total, self.__settings, width, 0)
-            row = _display_view_toggle(self.__frame, self.__view_mode, width, row,
-                                        self.__toggle_view)
-            if self.__view_mode == "massacre":
-                massacre_data = self.__massacre_data or MassacreData({})
-                _display_massacre_data(self.__frame, massacre_data, self.__settings, row)
-            else:
-                _display_all_missions(self.__frame, self.__all_missions_data, row)
+            row = _display_category_nav(self.__frame, self.__current_category,
+                                        self.__category_counts(), width, row,
+                                        self.__prev_category, self.__next_category)
+            self.__render_current_page(self.__frame, row)
 
         theme.update(self.__frame)
         # Re-apply accent colors the theme engine may have overridden
@@ -576,8 +603,7 @@ ui = UI()
 
 
 def handle_new_massacre_mission_state(data: Optional[dict[int, MassacreMission]]):
-    ui.notify_about_new_massacre_mission_state(
-        None if data is None else MassacreData(data))
+    ui.notify_about_new_massacre_mission_state(data)
 
 
 def handle_new_mission_state(data: Optional[dict[int, mission_state.Mission]]):

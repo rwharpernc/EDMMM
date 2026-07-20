@@ -9,6 +9,7 @@ from dataclasses import dataclass
 from typing import Callable, Optional
 
 import edmmm.mission_repository as mission_repository
+import edmmm.mission_types as mission_types
 from edmmm.logger_factory import logger
 
 
@@ -26,6 +27,9 @@ class Mission:
     """ISO timestamp the mission expires at, or "" if the mission has none."""
     accepted_at: str
     """ISO timestamp of the MissionAccepted event (sortable as a string)"""
+    category: str
+    """One of the mission_types.CATEGORY_ORDER keys."""
+    is_illegal: bool
 
 
 def __display_name(event: dict) -> str:
@@ -49,6 +53,8 @@ def __build_from_event(event: dict) -> Mission:
         is_wing=event.get("Wing", False),
         expiry=event.get("Expiry", ""),
         accepted_at=event.get("timestamp", ""),
+        category=mission_types.classify(event),
+        is_illegal=mission_types.is_illegal(event),
     )
 
 

@@ -12,26 +12,25 @@ massacre and raid missions) that estimates kill progress in detail.
 
 ## Features
 
-The panel has two views, toggled from a link at its top-right:
+The panel is a set of **category pages** — page ◂ / ▸ between them (empty
+categories are skipped automatically):
 
-- **All Missions** — every currently active mission, of any type: name,
-  giver faction, destination, reward, and time left, soonest-expiring
-  first.
-- **Massacre Stacking** — the detailed kill-progress view:
-  - Tracks **ship massacre missions** (`Mission_Massacre*`) *and* **on-foot
-    kill missions**: massacres, settlement raids (`Mission_OnFoot_Onslaught*`),
-    and any other mission with a kill count against a target faction.
-  - Space and ground missions are shown as **separate tables**, because ship
-    kills and on-foot kills count toward separate stacks in-game.
-  - Per mission-giver faction: required kills, **estimated kills done**,
-    reward in millions of credits (wing-shareable portion in brackets), and
-    a delta-to-highest-stack column.
-  - Shows the target settlements for ground missions.
-  - Warns when a stack has multiple target factions or target systems.
+1. **Massacre (Space)** / 2. **Settlement Raids (Ground)** — detailed
+   kill-progress views, kept separate since ship and on-foot kills count
+   toward separate stacks in-game. Per mission-giver faction: required
+   kills, estimated kills done, reward (wing-shareable portion in
+   brackets), and a delta-to-highest-stack column. The Ground page also
+   lists target settlements and warns on multi-faction/multi-system stacks.
+3. **Combat**, 4. **Trade & Mining**, 5. **Passenger**, 6. **Covert /
+   On-Foot Ops**, 7. **Other** — every other active mission, listed with
+   giver faction, destination, reward, and time left, soonest-expiring
+   first. Missions the game flags **illegal** (smuggling, illegal cargo,
+   etc.) are marked wherever they land, since illegality cuts across types.
 
-Both views share a header showing the active commander, their current
-**game mode** (Solo / Open / Private Group, with the group's name), and
-total active mission count (x/20 — the game's own mission cap).
+The header shows the active commander, their current **game mode** (Solo /
+Open / Private Group, with the group's name), and total active mission
+count (x/20 — the game's own mission cap). The current page is remembered
+across EDMC restarts.
 
 - **Per-commander profiles**: every mission, kill, and progress figure is
   tracked separately per CMDR. Switching commanders switches the whole view;
@@ -116,10 +115,17 @@ Issues and pull requests are welcome. The plugin's runtime code lives in
 [`EDMMM/`](EDMMM) — `load.py` is the EDMC entry point, and `EDMMM/edmmm/` is
 the actual package: journal scanning, mission repository (all active
 missions, per CMDR), massacre-specific filtering/kill tracking, the generic
-all-missions model, game mode tracking, settings, and UI. Since EDMC-only
-modules (`config`, `theme`, `myNotebook`) aren't installable standalone,
-there's no full unit-test suite outside EDMC; please test changes against a
-running copy of EDMC before opening a PR.
+all-missions model, the `mission_types.py` category classifier, game mode
+tracking, settings, and UI. Since EDMC-only modules (`config`, `theme`,
+`myNotebook`) aren't installable standalone, there's no full unit-test
+suite outside EDMC; please test changes against a running copy of EDMC
+before opening a PR.
+
+Mission-category detection (`mission_types.py`) is name-pattern matching
+against Elite Dangerous' internal mission names, which Frontier doesn't
+document — if you spot a mission landing in the wrong category, it's
+almost always a missing hint string, not a logic bug. PRs adding hints for
+mission types we don't recognize yet are especially welcome.
 
 ## License
 

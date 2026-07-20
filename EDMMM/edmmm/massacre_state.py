@@ -8,6 +8,7 @@ from typing import Callable, Optional
 
 import edmmm.kill_tracker as kill_tracker
 import edmmm.mission_repository as mission_repository
+import edmmm.mission_types as mission_types
 from edmmm.logger_factory import logger
 
 
@@ -28,39 +29,6 @@ class MassacreMission:
     """ISO timestamp of the MissionAccepted event (sortable as a string)"""
 
 
-_NAME_HINTS = ("massacre", "onslaught", "raid")
-"""
-Name fragments of known kill-faction mission types. "Onslaught" is the
-internal name for Odyssey settlement raid missions ("Take out members of
-<faction> at <settlement>").
-"""
-
-
-def __is_massacre_mission(event: dict) -> bool:
-    """
-    Matches any mission whose objective is killing members of a faction:
-    ship massacre missions (Mission_Massacre, Mission_MassacreWing, ...),
-    on-foot massacre missions, and settlement raids (Mission_OnFoot_Onslaught*).
-
-    Primary signal is the mission shape — a kill count against a target
-    faction — so mission types with unexpected internal names still match.
-    Name hints catch known variants that might omit one of the fields.
-    """
-    if event.get("KillCount") and event.get("TargetFaction"):
-        return True
-    name = event.get("Name", "").lower()
-    return any(hint in name for hint in _NAME_HINTS)
-
-
-def __is_ground_mission(event: dict) -> bool:
-    """
-    On-foot missions have "OnFoot" in the internal name; settlement-targeted
-    missions also carry a DestinationSettlement field.
-    """
-    return "onfoot" in event.get("Name", "").lower() \
-        or bool(event.get("DestinationSettlement"))
-
-
 def __build_from_event(event: dict) -> MassacreMission:
     return MassacreMission(
         id=event["MissionID"],
@@ -72,7 +40,7 @@ def __build_from_event(event: dict) -> MassacreMission:
         count=event.get("KillCount", 0),
         reward=event.get("Reward", 0),
         is_wing=event.get("Wing", False),
-        is_ground=__is_ground_mission(event),
+        is_ground=mission_types.is_ground_mission(event),
         accepted_at=event.get("timestamp", ""),
     )
 
@@ -155,7 +123,7 @@ def __handle_new_missions_state(data: Optional[dict[int, dict]]):
     logger.info(f"Received a new Missions State with {len(data)} Missions.")
     _massacre_mission_store = {}
     for mission_event in data.values():
-        if __is_massacre_mission(mission_event):
+        if mission_types.is_massacre_shaped(mission_event):
             mission = __build_from_event(mission_event)
             _massacre_mission_store[mission.id] = mission
             arena = "ground" if mission.is_ground else "space"

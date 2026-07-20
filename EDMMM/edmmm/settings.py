@@ -10,6 +10,7 @@ from typing import Callable
 import myNotebook as nb
 from config import config
 
+import edmmm.mission_types as mission_types
 from edmmm.logger_factory import LOG_FILE, logger
 
 plugin_name = basename(Path(dirname(__file__)).parent)
@@ -83,15 +84,16 @@ class Configuration:
 
     #######################################
     @property
-    def view_mode(self) -> str:
-        """Which panel view is showing: "massacre" or "all". Set by the
-        toggle in the UI itself, not the settings tab, but persisted the
-        same way so it survives EDMC restarts."""
-        return config.get_str(f"{self.plugin_name}.view_mode", default="massacre")
+    def current_category(self) -> str:
+        """Which category page is showing (a mission_types.CATEGORY_ORDER
+        key). Set by the prev/next nav in the UI itself, not the settings
+        tab, but persisted the same way so it survives EDMC restarts."""
+        return config.get_str(f"{self.plugin_name}.current_category",
+                              default=mission_types.CATEGORY_ORDER[0])
 
-    @view_mode.setter
-    def view_mode(self, value: str):
-        config.set(f"{self.plugin_name}.view_mode", value)
+    @current_category.setter
+    def current_category(self, value: str):
+        config.set(f"{self.plugin_name}.current_category", value)
 
     #######################################
     def __init__(self, plugin_name: str):
