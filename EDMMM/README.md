@@ -31,14 +31,9 @@ settlement massacre and raid missions), including estimated kill progress.
    (usually `%LOCALAPPDATA%\EDMarketConnector\plugins`).
 3. Unzip the release and copy the whole `EDMMM` folder into that plugins
    folder.
-4. If an older version under a different folder name is present (e.g.
-   `EDMMT` or `EDMC-MassacreTracker`), delete it — two copies of the plugin
-   must not run at the same time.
+4. If an older copy of the plugin is already present, delete it first —
+   two copies of the plugin must not run at the same time.
 5. Restart EDMC.
-
-> Renaming the plugin folder resets its settings (they're namespaced by
-> folder name) and moves the log file — this only matters once, the first
-> time you upgrade from an `EDMMT`-named install to `EDMMM`.
 
 The plugin's settings tab appears in File → Settings under "EDMMM".
 

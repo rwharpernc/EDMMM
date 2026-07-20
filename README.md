@@ -8,9 +8,6 @@ A plugin for [Elite Dangerous Market Connector](https://github.com/EDCD/EDMarket
 settlement massacre and raid missions), including estimated kill progress —
 per commander, per mission-giver faction.
 
-> This project was previously developed under the name **EDMMT** ("Elite
-> Dangerous Modern Massacre Tracker"). Same plugin, same author, new name.
-
 <!-- TODO: drop in a screenshot of the plugin panel here. -->
 
 ## Features
@@ -41,9 +38,7 @@ per commander, per mission-giver faction.
    (usually `%LOCALAPPDATA%\EDMarketConnector\plugins`).
 3. Unzip the release and copy the whole `EDMMM` folder into that plugins
    folder.
-4. If an older copy under a different folder name is present (e.g. `EDMMT`),
-   delete it first — two copies of the plugin must not run at the same time.
-5. Restart EDMC.
+4. Restart EDMC.
 
 The settings tab appears under File → Settings → **EDMMM**.
 
@@ -67,11 +62,11 @@ folder straight into your EDMC plugins directory to test), and also writes
 
 Releases are cut from git tags:
 
-1. Bump `EDMMM/version` (plain semver, e.g. `1.3.0`, no `v` prefix) and land
+1. Bump `EDMMM/version` (plain semver, e.g. `0.2.0`, no `v` prefix) and land
    it on `main`. Update `CHANGELOG.md`.
-2. Tag the commit and push the tag: `git tag v1.3.0 && git push origin v1.3.0`.
+2. Tag the commit and push the tag: `git tag v0.2.0 && git push origin v0.2.0`.
 3. GitHub Actions ([`.github/workflows/release.yml`](.github/workflows/release.yml))
-   builds `dist/EDMMM-v1.3.0.zip` and publishes it as a GitHub Release with
+   builds `dist/EDMMM-v0.2.0.zip` and publishes it as a GitHub Release with
    auto-generated release notes. The workflow fails the build if the tag and
    `EDMMM/version` don't match, so the two can't drift apart.
 
