@@ -37,10 +37,34 @@ stay live without waiting for a journal event."""
 
 # Elite-style palette for non-text graphics only. Text colors are supplied by
 # EDMC so they retain sufficient contrast with the selected theme.
-ACCENT = "#ff8c0d"      # Elite orange
-OK = "#71c837"          # complete / totals
-SEPARATOR = "#5a5f62"
-BAR_TRACK = "#3c4043"
+ACCENT = "#ff8c0d"      # Elite orange - progress-bar fill, reads fine on both themes
+OK = "#71c837"          # complete / totals - progress-bar fill, reads fine on both themes
+
+# The separator line and the progress-bar track are flat grays, so unlike the
+# fill colors above they need their own light/dark variants: a single gray
+# can't have enough contrast against both EDMC's near-black Dark theme
+# (background "grey4") and its usually light-system-colored Default theme.
+# The original values were tuned for Default only, which is why they all but
+# vanished under Dark.
+_SEPARATOR_LIGHT = "#5a5f62"
+_SEPARATOR_DARK = "#82878b"
+_BAR_TRACK_LIGHT = "#3c4043"
+_BAR_TRACK_DARK = "#64686c"
+
+
+def _is_dark_theme() -> bool:
+    """True for EDMC's Dark/Transparent themes (near-black background), as
+    opposed to Default (system colors, usually light)."""
+    return theme.active not in (None, theme.THEME_DEFAULT)
+
+
+def _separator_color() -> str:
+    return _SEPARATOR_DARK if _is_dark_theme() else _SEPARATOR_LIGHT
+
+
+def _bar_track_color() -> str:
+    return _BAR_TRACK_DARK if _is_dark_theme() else _BAR_TRACK_LIGHT
+
 
 BAR_WIDTH = 64
 BAR_HEIGHT = 7
@@ -204,16 +228,17 @@ def _format_destination(mission: mission_state.Mission) -> str:
 
 def _separator(frame: tk.Frame, row: int, width: int, pady: int = 3) -> int:
     sep = tk.Frame(frame, height=1, borderwidth=0)
-    sep.configure(background=SEPARATOR)
+    sep.configure(background=_separator_color())
     sep.grid(row=row, column=0, columnspan=width, sticky="ew", pady=pady)
     return row + 1
 
 
 def _progress_bar(frame: tk.Frame, done: int, required: int) -> tk.Canvas:
+    track = _bar_track_color()
     canvas = tk.Canvas(frame, width=BAR_WIDTH, height=BAR_HEIGHT,
-                       highlightthickness=0, borderwidth=0, background=BAR_TRACK)
+                       highlightthickness=0, borderwidth=0, background=track)
     canvas.create_rectangle(0, 0, BAR_WIDTH, BAR_HEIGHT,
-                            fill=BAR_TRACK, outline="")
+                            fill=track, outline="")
     fraction = 0.0 if required <= 0 else min(done / required, 1.0)
     if fraction > 0:
         color = OK if fraction >= 1.0 else ACCENT

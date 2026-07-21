@@ -35,8 +35,13 @@ across EDMC restarts.
 - **Per-commander profiles**: every mission, kill, and progress figure is
   tracked separately per CMDR. Switching commanders switches the whole view;
   one commander's missions can never bleed into another's.
-- Modern look: per-faction progress bars, section separators, and
-  right-aligned numeric columns that follow the EDMC theme.
+- Theme-aware UI: all panel text inherits EDMC's configured colors, including
+  custom dark-theme text colors, while per-faction progress bars and section
+  separators keep their own visual accents, picked to stay visible on both
+  EDMC's Default and Dark/Transparent themes. Nested sections are themed on
+  their first render, and warnings use visible symbols rather than relying on
+  a hard-coded text color.
+- Right-aligned numeric columns keep mission totals and progress easy to scan.
 - No web calls — the plugin only reads your local journal files.
 
 ## Installation

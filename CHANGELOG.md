@@ -27,3 +27,12 @@ Initial release.
 - Per-commander profiles — tracking never bleeds between CMDRs.
 - Reads the last two weeks of journal files on startup so state survives
   EDMC restarts. No web calls.
+- Updated the UI to inherit EDMC's configured text colors throughout the
+  panel, including nested sections on their first render. This improves
+  contrast with custom and dark themes by removing hard-coded text colors.
+- Warnings and urgent expiry times now use visible warning symbols so their
+  meaning does not depend on a particular text color.
+- Fixed the progress-bar track and section separators being nearly invisible
+  under EDMC's Dark theme — they now pick a lighter gray on Dark/Transparent
+  and the original gray on Default, instead of one hard-coded value tuned
+  only for a light background.
