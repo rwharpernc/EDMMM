@@ -4,9 +4,9 @@ All notable changes to this project are documented here. Format loosely
 follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versions
 match `EDMMM/version` and the git tag each release is built from.
 
-## [0.1.0]
+## [0.1.0-alpha.1]
 
-Initial release.
+First alpha release.
 
 - Tracks every active mission of any type, classified into 7 category pages
   you page through with ◂ / ▸ on the panel (empty categories are skipped):
