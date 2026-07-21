@@ -3,7 +3,7 @@
 [![Release](https://img.shields.io/github/v/release/rwharpernc/EDMMM?sort=semver)](https://github.com/rwharpernc/EDMMM/releases/latest)
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](LICENSE)
 
-**Author:** R.W. Harper | **License:** GPLv3 (see [LICENSE](LICENSE))
+**Author:** R.W. Harper (CMDR Mactavious) | **License:** GPLv3 (see [LICENSE](LICENSE))
 
 A plugin for [Elite Dangerous Market Connector](https://github.com/EDCD/EDMarketConnector)
 (EDMC) that tracks **every active mission**, with a dedicated view for

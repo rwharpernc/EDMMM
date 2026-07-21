@@ -1,6 +1,6 @@
 # EDMMM — Elite Dangerous: My Mission Manager
 
-**Author:** R.W. Harper | **License:** GPLv3
+**Author:** R.W. Harper (CMDR Mactavious) | **License:** GPLv3
 
 A plugin for [Elite Dangerous Market Connector](https://github.com/EDCD/EDMarketConnector)
 that tracks **every active mission**, with a dedicated view for **massacre
