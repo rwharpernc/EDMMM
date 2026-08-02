@@ -1,8 +1,7 @@
 # Changelog
 
-All notable changes to this project are documented here. Format loosely
-follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versions
-match `EDMMM/version` and the git tag each release is built from.
+All notable changes to this project are documented here. Versions match
+`EDMMM/version` and the git tag each release is built from.
 
 ## [0.1.0-beta.1]
 
