@@ -8,13 +8,16 @@ The plugin's runtime code lives in [`EDMMM/`](EDMMM):
 
 - **`load.py`** — EDMC entry point; handles plugin startup and UI integration.
 - **`EDMMM/edmmm/`** — the main package:
-  - `journal_scanner.py` — reads Elite Dangerous journal files.
+  - `journal_scan.py` — reads historic journal files so state survives EDMC restarts.
+  - `mission_repository.py` — holds per-commander active mission state and notifies listeners when it changes.
   - `mission_state.py` — tracks all active missions per commander.
   - `massacre_state.py` — massacre-specific filtering and kill tracking.
+  - `kill_tracker.py` — tracks bounty/redirect evidence used to estimate massacre kill progress.
   - `mission_types.py` — classifies missions into categories (see below).
   - `game_mode.py` — tracks Solo/Open/Private Group status.
   - `ui.py` — renders the EDMC panel.
   - `settings.py` — plugin preferences and configuration.
+  - `logger_factory.py` — sets up the plugin's rotating log file.
 
 ## Testing changes
 

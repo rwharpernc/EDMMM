@@ -1,9 +1,9 @@
 # TODO List
 
-## Features to Add
+Nothing currently planned. This file tracks reported bugs as they come in;
+see [GitHub Issues](https://github.com/rwharpernc/EDMMM/issues) for the
+full history and discussion.
 
-- [ ] Implement a new game mode (e.g., Survival Mode).
-- [ ] Add persistent player profiles and save data.
-- [ ] Enhance the mission repository with more dynamic content generation.
-- [ ] Improve UI responsiveness and add advanced visual effects.
-- [ ] Integrate external APIs for leaderboards or stats tracking.
+## Open bugs
+
+- None at this time.

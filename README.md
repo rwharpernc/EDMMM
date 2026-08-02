@@ -1,13 +1,17 @@
-# Elite Dangerous: My Mission Manager (EDMMM)
+# Elite Dangerous: My Mission Manager (EDMMM) — An EDMC Plugin
 
 [![Release](https://img.shields.io/github/v/release/rwharpernc/EDMMM?sort=semver)](https://github.com/rwharpernc/EDMMM/releases/latest)
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](LICENSE)
 
 **Author:** R.W. Harper (CMDR Mactavious) | **License:** GPLv3 (see [LICENSE](LICENSE))
 
+## Requirement
+
+**[EDMarketConnector (EDMC)](https://github.com/EDCD/EDMarketConnector) must already be installed and running.** EDMMM is a plugin for EDMC, not a standalone application — it cannot function without it.
+
 ## What is EDMMM?
 
-EDMMM is a plugin for [Elite Dangerous Market Connector](https://github.com/EDCD/EDMarketConnector) (EDMC) that displays **all your active missions in one place** — with a specialized view for massacre missions that tracks your kill progress in detail.
+EDMMM displays **all your active missions in one place** — with a specialized view for massacre missions that tracks your kill progress in detail.
 
 ## Features
 
