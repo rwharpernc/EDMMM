@@ -33,6 +33,10 @@ with you.
 
 ## Features
 
+Several new features are currently under research and design — see
+[TODO.md](https://github.com/rwharpernc/EDMMM/blob/main/TODO.md) for
+what's being explored.
+
 ### Navigation
 
 - The panel is a set of **7 category pages** — click ◂ / ▸ to page between

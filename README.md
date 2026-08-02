@@ -32,6 +32,9 @@ EDMMM displays **all your active missions in one place** — with a specialized 
 
 ## Features
 
+Several new features are currently under research and design — see
+[TODO.md](TODO.md) for what's being explored.
+
 ### Navigation
 
 - The plugin adds a panel to EDMC showing your missions across **7 category pages**. Use the ◂ / ▸ arrows to page between them — empty categories are automatically skipped.
