@@ -10,7 +10,9 @@ missions) that estimates kill progress in detail.
 ## Features
 
 The panel is a set of **category pages** — click ◂ / ▸ to page between them
-(empty categories are skipped automatically):
+(empty categories are skipped automatically). If you have no missions
+assigned at all, the panel shows a "No missions currently assigned."
+message instead of the page selector:
 
 1. **Massacre (Space)** and **2. Settlement Raids (Ground)** — the detailed
    kill-progress views, kept separate because ship kills and on-foot kills

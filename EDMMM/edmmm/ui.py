@@ -527,6 +527,18 @@ class UI:
                 counts[mission.category] += 1
         return counts
 
+    def __ensure_valid_category(self, counts: dict[str, int]):
+        """If the persisted/current category has no active missions but
+        another one does, jump to the first category (in display order)
+        that does, so the nav never lands on an empty page."""
+        if counts.get(self.__current_category, 0) > 0:
+            return
+        for key in mission_types.CATEGORY_ORDER:
+            if counts[key] > 0:
+                self.__current_category = key
+                edmmm.settings.configuration.current_category = key
+                return
+
     def __step_category(self, direction: int):
         counts = self.__category_counts()
         order = mission_types.CATEGORY_ORDER
@@ -581,14 +593,19 @@ class UI:
         if self.__all_missions_data is None:
             _display_no_data_info(self.__frame, kill_tracker.current_cmdr)
         else:
+            counts = self.__category_counts()
             width = max(_row_width(self.__settings), _ALL_MISSIONS_ROW_WIDTH)
             total = len(self.__all_missions_data)
             row = _display_cmdr_header(self.__frame, kill_tracker.current_cmdr,
                                         total, self.__settings, width, 0)
-            row = _display_category_nav(self.__frame, self.__current_category,
-                                        self.__category_counts(), width, row,
-                                        self.__prev_category, self.__next_category)
-            self.__render_current_page(self.__frame, row)
+            if sum(counts.values()) == 0:
+                _display_no_missions(self.__frame, row, "No missions currently assigned.")
+            else:
+                self.__ensure_valid_category(counts)
+                row = _display_category_nav(self.__frame, self.__current_category,
+                                            counts, width, row,
+                                            self.__prev_category, self.__next_category)
+                self.__render_current_page(self.__frame, row)
 
         _apply_theme(self.__frame)
 

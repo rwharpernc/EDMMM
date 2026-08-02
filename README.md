@@ -11,7 +11,7 @@ EDMMM is a plugin for [Elite Dangerous Market Connector](https://github.com/EDCD
 
 ## Features
 
-The plugin adds a panel to EDMC that shows your missions across 7 category pages. Use the ◂ / ▸ arrows to page between them (empty categories are automatically skipped):
+The plugin adds a panel to EDMC that shows your missions across 7 category pages. Use the ◂ / ▸ arrows to page between them (empty categories are automatically skipped). If you have no missions assigned at all, the panel simply shows a message saying so instead of the page selector.
 
 ### Pages 1–2: Massacre & Settlement Raids (Ground)
 

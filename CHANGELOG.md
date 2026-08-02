@@ -4,6 +4,15 @@ All notable changes to this project are documented here. Format loosely
 follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versions
 match `EDMMM/version` and the git tag each release is built from.
 
+## [0.1.0-beta.1]
+
+- If you have no missions assigned at all, the panel now shows a plain "No
+  missions currently assigned." message instead of the ◂ / ▸ category
+  selector and an empty page.
+- The category selector no longer opens on an empty category on startup —
+  if the previously-viewed category has no active missions but another one
+  does, it jumps to the first category that does.
+
 ## [0.1.0-alpha.1]
 
 First alpha release.
