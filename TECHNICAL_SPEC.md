@@ -161,16 +161,105 @@ logic bug.
 ## Kill-progress estimation
 
 `massacre_state.compute_progress()` is the one genuinely non-trivial
-algorithm in the codebase. A `Bounty` event doesn't reference a
-`MissionID` — the game just reports "you killed a member of faction X."
-The algorithm assigns each bounty to *the earliest still-open mission from
-that specific mission-giver, targeting that faction, in the matching arena
-(ground vs. space), accepted before the kill happened* — mirroring how the
-game's own stacking rewards work: one kill can advance a mission from
-*each* distinct giver simultaneously, but only one mission per giver per
-kill. `MissionRedirected` is treated as authoritative ground truth and
-overrides the estimate for that mission entirely, regardless of what the
-bounty-based estimate says.
+algorithm in the codebase, because of a fundamental gap in what the
+journal reports: **a `Bounty` event never references a `MissionID`.** The
+game just reports "you killed a member of faction X" — it doesn't say
+which mission, if any, that kill should count against. Everything else in
+the algorithm exists to close that gap by inference.
+
+### How it works
+
+1. **Kill evidence is collected independently of missions.**
+   `kill_tracker.py` accumulates every `Bounty` and `MissionRedirected`
+   event per CMDR as it arrives, with no knowledge of which missions are
+   currently active. This decoupling matters at startup: the two-week
+   journal backfill replays old events in file order, and a kill logged
+   before its matching mission has even been reconstructed still needs
+   somewhere to land.
+2. **Mission-complete signals are authoritative and short-circuit
+   everything.** `MissionRedirected` fires when the game itself decides a
+   mission's kill objective is met. Any mission ID that's been redirected
+   is marked done (`progress[id] = mission.count`) immediately and
+   excluded from bounty matching entirely — no inference happens for it,
+   because none is needed.
+3. **Everything else is inferred from `Bounty` events, using the same
+   rules the game itself uses for stacking:**
+   - Open (non-redirected) missions are grouped by mission-giver faction
+     (`source_faction`), then sorted oldest-accepted-first within each
+     group.
+   - For each bounty, in chronological order, the algorithm walks every
+     giver's mission list and — for each giver independently — advances
+     the *earliest still-open, not-yet-full* mission whose
+     `target_faction` matches the bounty's `VictimFaction`, whose
+     ground/space arena matches (`kill_tracker.is_ground_kill()` on the
+     bounty vs. `mission.is_ground`), and which was accepted at or before
+     the kill.
+   - The inner loop `break`s after crediting one mission per giver, but
+     the outer loop over givers does not stop — so a single kill can
+     advance one mission from *each* distinct mission-giver
+     simultaneously. This mirrors the actual in-game mechanic: if two
+     factions both have a "kill Faction X" mission on your board, one kill
+     nets a bounty voucher toward both, because each employer recognizes
+     it independently. Crediting one mission *per giver* (rather than one
+     total, or unlimited per giver) is what makes stacking of same-faction
+     missions from different sources work correctly, while still
+     preventing one kill from completing two missions from the *same*
+     giver.
+
+### Why redirected overrides the estimate
+
+The bounty-matching rules above are a best-effort inference — matching
+faction + arena + oldest-open-mission-per-giver is the closest available
+approximation of "which mission did this kill belong to," but the journal
+never confirms it directly. `MissionRedirected` is the one signal that
+isn't inferred: it comes straight from the game's own bookkeeping.
+Wherever the two disagree, redirected wins, unconditionally.
+
+### Limitations for Wing missions
+
+The estimation side of this algorithm (step 3 above) is built exclusively
+from **the current CMDR's own `Bounty` events.** That's a safe assumption
+for a solo mission, since only the accepting commander's kills can
+possibly count. It breaks down for Wing missions (the event's `Wing: true`
+flag, tracked as `MassacreMission.is_wing`), because Frontier's
+wing-mission design lets *any* wingmate's kill count toward *everyone's*
+individual copy of that mission — and a wingmate's kill never produces a
+`Bounty` event in your own journal. No journal field anywhere reports
+"your wingmate killed one on your behalf."
+
+Concretely:
+
+- **Progress under-counts whenever wingmates are doing the killing.** If
+  your wing is landing the kills and you're landing fewer of them, the
+  panel's displayed count for a wing mission reflects only your personal
+  kills, not the wing's combined total, and will sit low right up until
+  the mission completes.
+- **`is_wing` is never consulted by `compute_progress()`.** It's tracked
+  on `MassacreMission` and used elsewhere purely for display (the
+  shareable-reward total in `mission_state.py`, the "Reward (Wing)" column
+  header in `ui.py`), but the progress algorithm applies identical
+  faction/arena/giver matching whether or not a mission is a wing mission.
+  There's no special-casing for shared credit — nor could there be, since
+  no evidence of a wingmate's kill ever reaches the journal to special-case
+  on.
+- **This is why the `MissionRedirected` override matters most for wing
+  missions.** Without it, a wing mission where wingmates land most of the
+  kills would show as stuck at some partial count forever, since your own
+  bounty stream would never reach `mission.count`. Because
+  `MissionRedirected` is authoritative and independent of the bounty
+  count, the mission still correctly flips to "done" the instant the game
+  confirms it — but the displayed count can jump straight from a low
+  partial number to fully complete in one step, skipping the intermediate
+  values a solo mission would normally pass through one kill at a time.
+- **There is no way to show a wing/solo split.** Because wingmate kills
+  never appear in your journal at all, not even as an anonymized event,
+  the plugin structurally cannot report something like "wing has done
+  7/10, 2 of which were yours" — the underlying data doesn't exist locally
+  to compute it.
+
+This isn't a bug to fix so much as a hard ceiling imposed by what the
+journal exposes: wing-mission progress should be read as "at least this
+many, confirmed done the moment it flips."
 
 ## Config & persistence
 
