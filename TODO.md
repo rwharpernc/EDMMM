@@ -41,6 +41,27 @@ history and discussion.
       of fields from the raw journal event, though, so a genuinely
       richer detail popup would need capturing more fields (or the raw
       event dict) than what's already shown on the row.
+- [ ] Show wing status and the wing-shareable reward split on Pages 3–7
+      (Trade & Mining, Combat, Passenger, Covert, Other), not just the
+      Massacre/Settlement Raids pages. `Mission.is_wing`
+      (`mission_state.py`) is already tracked for every mission type, but
+      `_display_all_missions_row` (`ui.py`) never reads it — confirmed by
+      inspection, it only shows name/faction/destination/reward/expiry.
+      This would also make Wing Mining and Wing Trading missions (which
+      land on the Trade & Mining page, not Massacre) show their wing
+      status, which today they don't.
+- [ ] Investigate showing which mining method (core / laser-surface /
+      sub-surface deposit) a mining mission's target commodity requires.
+      Two real gaps found: (1) the mission's target commodity isn't
+      captured at all today - `mission_state.Mission` has no `Commodity`
+      field, only the human-readable mission name; (2) even once captured,
+      the journal doesn't say which mining method a commodity needs -
+      that mapping is external game knowledge, not journal data, so this
+      would need a maintained static commodity-to-method lookup table
+      (similar upkeep burden to the `mission_types.py` hint lists) and
+      could only ever be a "typical method" approximation, since a given
+      commodity can sometimes come from more than one method depending on
+      the specific ring/hotspot.
 
 ## Open bugs
 

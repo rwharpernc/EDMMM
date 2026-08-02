@@ -71,8 +71,11 @@ in-game.
 - **Combat** — assassinations, black ops, piracy and Thargoid-related
   missions, megaship disables, skimmer clearing, and other non-massacre
   combat missions.
-- **Trade & Mining** — delivery, courier, collection, mining, salvage,
-  colonisation/construction supply runs, and Community Goal contributions.
+- **Trade & Mining** — delivery, courier, collection, mining, salvage, and
+  colonisation/construction supply runs. Community Goals are **not**
+  covered here or anywhere else — they aren't accepted missions in the
+  game's own data model (no `MissionAccepted` event, no `MissionID`), so
+  EDMMM has no way to see them.
 - **Passenger** — VIP, bulk, sightseeing, evacuation, and prisoner-transport
   missions.
 - **Covert / On-Foot Ops** — hacking, sabotage, heists, and other on-foot
@@ -86,6 +89,12 @@ since illegality cuts across types rather than being its own category.
 Mission-type detection is name-based (the game doesn't expose a clean type
 field), so a handful of obscure or new mission types may land in *Other*
 until their naming pattern is added.
+
+**Wing missions** (Wing Mining, Wing Trading, Wing Massacre, etc.) are
+tracked and categorized the same as any other mission, but the
+wing-shareable reward split shown in brackets is currently only rendered
+on the Massacre & Settlement Raids pages above — pages 3–7 show the full
+reward with no wing indicator.
 
 ### Header & General
 
