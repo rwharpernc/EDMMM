@@ -163,3 +163,5 @@ GPL-3.0 — see [LICENSE](LICENSE).
 **Found a bug or have a suggestion?** Open an issue on [GitHub](https://github.com/rwharpernc/EDMMM/issues).
 
 **Want to contribute code?** See [CONTRIBUTING.md](CONTRIBUTING.md).
+
+**Curious how it works under the hood?** See [TECHNICAL_SPEC.md](TECHNICAL_SPEC.md) for the stack and architecture.
