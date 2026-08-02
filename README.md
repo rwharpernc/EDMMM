@@ -5,19 +5,39 @@
 
 **Author:** R.W. Harper (CMDR Mactavious) | **License:** GPLv3 (see [LICENSE](LICENSE))
 
+## Contents
+
+- [Requirement](#requirement)
+- [What is EDMMM?](#what-is-edmmm)
+- [Features](#features)
+  - [Navigation](#navigation)
+  - [Pages 1–2: Massacre (Space) \& Settlement Raids (Ground)](#pages-12-massacre-space--settlement-raids-ground)
+  - [Pages 3–7: All Other Missions](#pages-37-all-other-missions)
+  - [Header \& General](#header--general)
+  - [Settings](#settings)
+- [Installation](#installation)
+- [Usage](#usage)
+- [How kill progress is estimated](#how-kill-progress-is-estimated)
+- [More info](#more-info)
+- [Acknowledgements](#acknowledgements)
+- [License](#license)
+
 ## Requirement
 
 **[EDMarketConnector (EDMC)](https://github.com/EDCD/EDMarketConnector) must already be installed and running.** EDMMM is a plugin for EDMC, not a standalone application — it cannot function without it.
 
 ## What is EDMMM?
 
-EDMMM displays **all your active missions in one place** — with a specialized view for massacre missions that tracks your kill progress in detail.
+EDMMM displays **all your active missions in one place** — with a specialized view for massacre missions that tracks your kill progress in detail. Every commander's missions, kills, and progress are tracked separately, so it's **alt-friendly**: switch commanders in EDMC and the whole panel switches with you.
 
 ## Features
 
-The plugin adds a panel to EDMC that shows your missions across 7 category pages. Use the ◂ / ▸ arrows to page between them (empty categories are automatically skipped). If you have no missions assigned at all, the panel simply shows a message saying so instead of the page selector.
+### Navigation
 
-**Only active missions are ever shown** — the moment you hand in, abandon, or fail a mission, it drops off the panel. Nothing lingers after it's no longer active.
+- The plugin adds a panel to EDMC showing your missions across **7 category pages**. Use the ◂ / ▸ arrows to page between them — empty categories are automatically skipped.
+- **Only active missions are ever shown** — the moment you hand in, abandon, or fail a mission, it drops off the panel. Nothing lingers after it's no longer active.
+- If you have no missions assigned at all, the panel shows a message saying so instead of the page selector.
+- **Remembers your page** — the category you were viewing is restored when you restart EDMC.
 
 ### Pages 1–2: Massacre (Space) & Settlement Raids (Ground)
 
@@ -26,7 +46,8 @@ The plugin adds a panel to EDMC that shows your missions across 7 category pages
 These two pages track the *same* underlying mission type — one with a kill count against a target faction — split by where the killing happens: **Massacre (Space)** is ship kills, **Settlement Raids (Ground)** is the on-foot version (raiding an Odyssey settlement). They're kept on separate pages because ship kills and on-foot kills stack independently in-game.
 
 - Lists every massacre mission or settlement raid you have stacked, on whichever of the two pages matches how it's fought.
-- Shows **required kills**, **estimated progress** (how many kills you've made toward each mission), reward, and which faction each mission came from.
+- Per mission-giver faction: **required kills**, **estimated progress**, and **reward** (with the wing-shareable portion shown in brackets for missions accepted with a wing).
+- A **delta column** shows how many kills separate each faction's stack from the current highest stack, so you know which to prioritize while hunting.
 - The Ground page also lists the target settlements and warns you if multiple missions target different factions or star systems in the same stack (that's usually a problem).
 - Kill progress is an estimate based on the bounties you've claimed — it updates live as you hunt.
 
@@ -42,13 +63,27 @@ These two pages track the *same* underlying mission type — one with a kill cou
 
 Each mission shows: destination, reward, and time until expiry (soonest-expiring first). Missions the game flags as **illegal** are marked so you know which ones break laws.
 
-### General Features
+### Header & General
 
-- **Header shows your active commander**, current game mode (Solo / Open / Private Group with group name), and total mission count (x/20 — the game's limit).
-- **Remembers your page** — the category you were viewing is restored when you restart EDMC.
-- **Per-commander profiles** — each commander's missions, kills, and progress are tracked separately. Switching commanders switches the entire view.
+- **Header shows your active commander**, current game mode (Solo / Open / Private Group with group name / CQC), and total mission count (x/20 — the game's limit).
+- **Per-commander profiles** — each commander's missions, kills, and progress are tracked separately; switching commanders switches the entire view. This is what makes EDMMM alt-friendly.
 - **Works offline** — the plugin only reads your local journal files. No web calls, no external dependencies.
 - **Theme-aware** — the panel respects EDMC's light and dark themes, so it's readable no matter which one you use.
+- **Its own rotating log file**, separate from EDMC's, so plugin issues can be diagnosed without digging through EDMC's log.
+
+### Settings
+
+The plugin's options tab is in EDMC under **File → Settings → EDMMM**. It has a checkbox for each of these, all on by default:
+
+- Kill progress bars
+- Delta column
+- Sum row (per-faction totals on the massacre pages)
+- Mission count badge
+- Target settlement list (Ground page)
+- Commander name
+- Game mode
+
+The tab also shows the installed plugin version and the location of its log file.
 
 ## Installation
 
