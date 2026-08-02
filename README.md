@@ -17,24 +17,28 @@ EDMMM displays **all your active missions in one place** — with a specialized 
 
 The plugin adds a panel to EDMC that shows your missions across 7 category pages. Use the ◂ / ▸ arrows to page between them (empty categories are automatically skipped). If you have no missions assigned at all, the panel simply shows a message saying so instead of the page selector.
 
-### Pages 1–2: Massacre & Settlement Raids (Ground)
+**Only active missions are ever shown** — the moment you hand in, abandon, or fail a mission, it drops off the panel. Nothing lingers after it's no longer active.
+
+### Pages 1–2: Massacre (Space) & Settlement Raids (Ground)
 
 **Detailed kill-progress views for combat stacking.**
 
-- Lists every massacre mission and on-foot settlement raid you have stacked.
+These two pages track the *same* underlying mission type — one with a kill count against a target faction — split by where the killing happens: **Massacre (Space)** is ship kills, **Settlement Raids (Ground)** is the on-foot version (raiding an Odyssey settlement). They're kept on separate pages because ship kills and on-foot kills stack independently in-game.
+
+- Lists every massacre mission or settlement raid you have stacked, on whichever of the two pages matches how it's fought.
 - Shows **required kills**, **estimated progress** (how many kills you've made toward each mission), reward, and which faction each mission came from.
-- Ground raids also list the target settlements and warn you if multiple missions target different factions or star systems in the same stack (that's usually a problem).
+- The Ground page also lists the target settlements and warns you if multiple missions target different factions or star systems in the same stack (that's usually a problem).
 - Kill progress is an estimate based on the bounties you've claimed — it updates live as you hunt.
 
 ### Pages 3–7: All Other Missions
 
 **Organized by type for quick scanning.**
 
-- **Combat** — assassinations, megaship disables, skimmer clearing, and other combat-only missions.
-- **Trade & Mining** — delivery, courier, collection, mining, and salvage runs.
-- **Passenger** — VIP, bulk, sightseeing, and evacuation missions.
-- **Covert / On-Foot Ops** — hacking, sabotage, heists, and other on-foot missions.
-- **Other** — anything that doesn't fit the above.
+- **Combat** — assassinations, black ops, piracy and Thargoid-related missions, megaship disables, skimmer clearing, and other non-massacre combat missions.
+- **Trade & Mining** — delivery, courier, collection, mining, salvage, colonisation/construction supply runs, and Community Goal contributions.
+- **Passenger** — VIP, bulk, sightseeing, evacuation, and prisoner-transport missions.
+- **Covert / On-Foot Ops** — hacking, sabotage, heists, and other on-foot missions that aren't settlement raids.
+- **Other** — anything that doesn't fit the above (a handful of obscure or new mission types may land here until their naming pattern is recognized).
 
 Each mission shows: destination, reward, and time until expiry (soonest-expiring first). Missions the game flags as **illegal** are marked so you know which ones break laws.
 
@@ -63,12 +67,15 @@ Each mission shows: destination, reward, and time until expiry (soonest-expiring
 
 **Note:** Installation is identical across all Windows storefronts — it doesn't matter if you own Elite Dangerous on Steam, Epic, or from Frontier.
 
+**All paths below assume a default install.** If you installed EDMC (or Elite Dangerous, or your Steam library) to a custom location, your actual paths will differ — always prefer the **Open the plugins folder** button and EDMC's own journal-path setting over typing a path by hand.
+
 ### Linux (Steam with Proton)
 
 Elite Dangerous and EDMC don't have native Linux clients, but both run well through Steam/Wine.
 
 1. If EDMC doesn't auto-detect your journal files, tell it where they are:
    - Under Proton, they're usually at: `~/.steam/steam/steamapps/compatdata/359320/pfx/drive_c/users/steamuser/Saved Games/Frontier Developments/Elite Dangerous`
+   - This assumes the default Steam library location — if Elite Dangerous is installed under a different Steam library (e.g. a second drive), `compatdata/359320` will be under that library's `steamapps` folder instead.
    - In EDMC: **File → Settings → Configuration tab** — set the journal path there.
 
 2. Open EDMC: **File → Settings → Plugins tab → *Open* the plugins folder**.

@@ -12,31 +12,44 @@ missions) that estimates kill progress in detail.
 
 ## Features
 
-The panel is a set of **category pages** — click ◂ / ▸ to page between them
-(empty categories are skipped automatically). If you have no missions
+The panel is a set of **7 category pages** — click ◂ / ▸ to page between
+them (empty categories are skipped automatically). If you have no missions
 assigned at all, the panel shows a "No missions currently assigned."
-message instead of the page selector:
+message instead of the page selector. **Only active missions are ever
+shown** — the moment you hand in, abandon, or fail a mission, it drops off
+the panel.
 
-1. **Massacre (Space)** and **2. Settlement Raids (Ground)** — the detailed
-   kill-progress views, kept separate because ship kills and on-foot kills
-   count toward separate stacks in-game:
-   - Tracks **ship massacre missions** (`Mission_Massacre*`) *and* **on-foot
-     kill missions**: massacres and settlement raids
-     (`Mission_OnFoot_Onslaught*`), or any other mission with a kill count
-     against a target faction.
-   - Per mission-giver faction: required kills, **estimated kills done**,
-     reward in millions of credits (wing-shareable portion in brackets), and
-     a delta-to-highest-stack column.
-   - The Ground page also shows the target settlements.
-   - Warns when a stack has multiple target factions or target systems.
-3. **Combat** — assassinations, megaship disables, skimmer clearing, and
-   other non-massacre combat missions.
-4. **Trade & Mining** — delivery, courier, collection, mining, and salvage
-   missions.
-5. **Passenger** — VIP, bulk, sightseeing, and evacuation passenger runs.
-6. **Covert / On-Foot Ops** — hacking, sabotage, heists, and other on-foot
-   missions that aren't settlement raids.
-7. **Other** — everything that doesn't fit the above.
+### Pages 1–2: Massacre (Space) & Settlement Raids (Ground)
+
+These two pages track the *same* underlying mission type — one with a kill
+count against a target faction — split by where the killing happens:
+**Massacre (Space)** is ship kills, **Settlement Raids (Ground)** is the
+on-foot version (raiding an Odyssey settlement). They're kept on separate
+pages because ship kills and on-foot kills count toward separate stacks
+in-game.
+
+- Tracks **ship massacre missions** (`Mission_Massacre*`) *and* **on-foot
+  kill missions**: massacres and settlement raids
+  (`Mission_OnFoot_Onslaught*`), or any other mission with a kill count
+  against a target faction.
+- Per mission-giver faction: required kills, **estimated kills done**,
+  reward in millions of credits (wing-shareable portion in brackets), and
+  a delta-to-highest-stack column.
+- The Ground page also shows the target settlements.
+- Warns when a stack has multiple target factions or target systems.
+
+### Pages 3–7: All Other Missions
+
+- **Combat** — assassinations, black ops, piracy and Thargoid-related
+  missions, megaship disables, skimmer clearing, and other non-massacre
+  combat missions.
+- **Trade & Mining** — delivery, courier, collection, mining, salvage,
+  colonisation/construction supply runs, and Community Goal contributions.
+- **Passenger** — VIP, bulk, sightseeing, evacuation, and prisoner-transport
+  missions.
+- **Covert / On-Foot Ops** — hacking, sabotage, heists, and other on-foot
+  missions that aren't settlement raids.
+- **Other** — everything that doesn't fit the above.
 
 Pages 3–7 are a plain list: mission name, giver faction, destination,
 reward, and time left, soonest-expiring first. Missions flagged **illegal**
@@ -76,6 +89,11 @@ storefront:
    (usually `%LOCALAPPDATA%\EDMarketConnector\plugins`).
 2. Copy the `EDMMM` folder there and restart EDMC.
 
+**These paths assume a default install.** If EDMC, Elite Dangerous, or your
+Steam library live somewhere custom, your actual paths will differ — prefer
+the **Open the plugins folder** button and EDMC's own journal-path setting
+over typing a path by hand.
+
 ### Linux (Steam / Proton)
 
 Elite Dangerous has no native Linux client, so this assumes you're running
@@ -85,7 +103,9 @@ via its [Flatpak on Flathub](https://flathub.org/apps/io.edcd.EDMarketConnector)
 
 1. If EDMC doesn't auto-detect your journal files, point it at
    `~/.steam/steam/steamapps/compatdata/359320/pfx/drive_c/users/steamuser/Saved Games/Frontier Developments/Elite Dangerous`
-   via File → Settings → Configuration.
+   via File → Settings → Configuration. This assumes the default Steam
+   library location — a Steam library on a different drive puts
+   `compatdata/359320` under that library's `steamapps` folder instead.
 2. Open EDMC → File → Settings → Plugins tab → *Open* the plugins folder.
    Use that button rather than a hardcoded path — a Flatpak install keeps
    plugins inside its sandboxed data directory
