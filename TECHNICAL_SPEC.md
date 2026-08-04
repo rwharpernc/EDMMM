@@ -24,7 +24,12 @@ contributing, not at end users — see [README.md](README.md) for that.
 - **UI:** Tkinter. The main panel (`ui.py`) is plain `tk` widgets so it
   inherits EDMC's theme colors automatically; the settings tab (`settings.py`)
   goes through EDMC's own `myNotebook` wrapper, since EDMC's prefs dialog may
-  back it with `ttk` depending on EDMC's version.
+  back it with `ttk` depending on EDMC's version. Since EDMC's panel is
+  narrow, entries render as stacked 2–4 line "cards" (pack()-managed
+  left/right line pairs, see `ui._line()`) rather than a wide grid table,
+  and the whole panel is wrapped in a `Canvas`/`Scrollbar` capped at
+  `ui._MAX_PANEL_HEIGHT` so a category with many missions scrolls instead
+  of forcing the EDMC window past screen height.
 - **Host application:** [EDMarketConnector](https://github.com/EDCD/EDMarketConnector)
   (EDMC). EDMC supplies the `config` module (settings persistence), the
   `theme` module (light/dark theme state), and the plugin lifecycle contract
@@ -109,11 +114,14 @@ every time it's needed.
 
 **`ui.py`** subscribes to all of the above and is the only module that
 touches Tkinter widgets directly. Every notification tears down and
-rebuilds the *entire* panel (`update_ui` destroys all children, then
-redraws) rather than diffing — simplicity over incremental-update
-performance, which is fine given the panel is small and updates are
-infrequent (a mission accept/complete/expire, or the 60-second refresh
-tick — not per-frame).
+rebuilds the *entire* panel (`update_ui` destroys all children of the
+scrollable content frame, then redraws) rather than diffing — simplicity
+over incremental-update performance, which is fine given the panel is
+small and updates are infrequent (a mission accept/complete/expire, or the
+60-second refresh tick — not per-frame). The optional "All missions" popup
+(a `Toplevel`, opened from the category nav) follows the same
+rebuild-on-notify pattern: `update_ui` refreshes it too, whenever it's
+currently open.
 
 ```mermaid
 flowchart LR
@@ -236,8 +244,9 @@ Concretely:
   the mission completes.
 - **`is_wing` is never consulted by `compute_progress()`.** It's tracked
   on `MassacreMission` and used elsewhere purely for display (the
-  shareable-reward total in `mission_state.py`, the "Reward (Wing)" column
-  header in `ui.py`), but the progress algorithm applies identical
+  shareable-reward total in `mission_state.py`, shown in brackets next to
+  the reward on each faction's card in `ui.py`), but the progress algorithm
+  applies identical
   faction/arena/giver matching whether or not a mission is a wing mission.
   There's no special-casing for shared credit — nor could there be, since
   no evidence of a wingmate's kill ever reaches the journal to special-case
@@ -295,7 +304,10 @@ release checklist.
   The startup journal scan runs synchronously and blocks the plugin's own
   startup until it finishes (mitigated by only scanning two weeks of
   files, not the full journal history).
-- **Rebuild-everything-on-update.** `ui.py`'s widget tree is destroyed and
-  recreated on every mission change and on every 60-second refresh tick
+- **Rebuild-everything-on-update.** `ui.py`'s content widget tree (and the
+  "All missions" popup's, if it's open) is destroyed and recreated on
+  every mission change and on every 60-second refresh tick
   (`REFRESH_INTERVAL_MS`). Fine at this scale; wouldn't scale to a much
-  larger panel without a diffing layer.
+  larger panel without a diffing layer. The `Canvas`/`Scrollbar` chrome
+  around the content is the one part that persists across rebuilds rather
+  than being recreated each time.

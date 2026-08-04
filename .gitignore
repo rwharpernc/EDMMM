@@ -11,6 +11,9 @@ __pycache__/
 .venv/
 venv/
 
+# Personal scratch notes, never committed
+PRIVATE_NOTES.md
+
 # Editor / OS cruft
 .idea/
 .vscode/

@@ -84,18 +84,20 @@ it.
   of fields from the raw journal event, though, so a genuinely richer
   detail popup would need capturing more fields (or the raw event dict)
   than what's already shown on the row.
-- **Live-update question:** confirmed there's no `Toplevel` anywhere in
-  the codebase today, so this is a new pattern, not a reused one. Built
-  the simple way, the window would be a static snapshot from when it was
-  opened - `update_ui()` only destroys/redraws children of the main panel
-  frame (on mission changes and the 60s refresh tick), so it has no way
-  to know a detail window exists. To make it live, the window would need
-  to register its own callback in `massacre_mission_listeners` /
-  `mission_listeners` / `kill_data_changed_listeners` (the same
-  plain-list pub/sub `ui.py` already uses for the main panel), re-run
-  `massacre_state.compute_progress()` on refresh since kill progress is
-  never stored, and deregister/guard with `winfo_exists()` on close to
-  avoid touching a destroyed window.
+- **Live-update question:** there's now prior art for this - the "All
+  missions" popup (`ui.UI.__show_all_missions_popup`) already opens a
+  `Toplevel` and keeps it live: `update_ui()` calls
+  `self.__refresh_popup()` at the end of every rebuild, which is a no-op
+  via `winfo_exists()` if the popup isn't currently open. A per-mission
+  detail window could follow the same pattern (track the open window plus
+  which mission it's showing, refresh/no-op it from `update_ui()`) rather
+  than registering separately in `massacre_mission_listeners` /
+  `mission_listeners` / `kill_data_changed_listeners`. Still need to
+  re-run `massacre_state.compute_progress()` on refresh since kill
+  progress is never stored, and to guard against the specific mission the
+  window was opened for having since disappeared (handed in/abandoned/
+  expired) - the "All missions" popup doesn't have this problem since it
+  isn't tied to one mission.
 
 ### Show wing status and reward split on Pages 3–7
 

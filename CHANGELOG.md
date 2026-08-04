@@ -3,6 +3,20 @@
 All notable changes to this project are documented here. Versions match
 `EDMMM/version` and the git tag each release is built from.
 
+## [0.2.0-beta.1]
+
+- Redesigned the panel's layout: entries now render as stacked 2–4 line
+  cards instead of wide multi-column rows, so long faction/mission/
+  destination names wrap and read cleanly in EDMC's narrow panel instead
+  of overflowing it.
+- The panel now scrolls (mouse wheel) once a category's mission list grows
+  past a height cap, instead of forcing the whole EDMC window taller than
+  the screen.
+- Added an "All" link next to the category nav that opens a separate,
+  wider window listing every active mission across every category in one
+  flat table. It stays live while open and reuses the same window if
+  clicked again rather than opening duplicates.
+
 ## [0.1.0-beta.1]
 
 - If you have no missions assigned at all, the panel now shows a plain "No

@@ -38,9 +38,11 @@ Several new features are currently under research and design — see
 ### Navigation
 
 - The plugin adds a panel to EDMC showing your missions across **7 category pages**. Use the ◂ / ▸ arrows to page between them — empty categories are automatically skipped.
+- **All** — click the "All" link next to the page arrows to open a separate window listing every active mission across every category at once, in a wide table (not limited to EDMC's narrow panel width). It stays live while open.
 - **Only active missions are ever shown** — the moment you hand in, abandon, or fail a mission, it drops off the panel. Nothing lingers after it's no longer active.
 - If you have no missions assigned at all, the panel shows a message saying so instead of the page selector.
 - **Remembers your page** — the category you were viewing is restored when you restart EDMC.
+- A category page with a lot of missions scrolls (mouse wheel) instead of growing the EDMC window indefinitely.
 
 ### Pages 1–2: Massacre (Space) & Settlement Raids (Ground)
 

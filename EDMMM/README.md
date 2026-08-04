@@ -41,6 +41,11 @@ what's being explored.
 
 - The panel is a set of **7 category pages** — click ◂ / ▸ to page between
   them; empty categories are skipped automatically.
+- **All** — click the "All" link next to the page arrows to open a separate
+  window listing every active mission across every category at once, in a
+  wide table rather than the main panel's narrow layout. It refreshes live
+  while open, and clicking "All" again just raises the existing window
+  instead of opening a duplicate.
 - **Only active missions are ever shown** — the moment you hand in,
   abandon, or fail a mission, it drops off the panel.
 - If you have no missions assigned at all, the panel shows a "No missions
@@ -48,6 +53,8 @@ what's being explored.
 - The current page is remembered across EDMC restarts — this is stored the
   same way as the [Settings](#settings) below, but set by paging with
   ◂ / ▸ on the panel itself rather than the settings tab.
+- A category page with enough missions to exceed a height cap scrolls with
+  the mouse wheel instead of growing the EDMC window indefinitely.
 
 ### Pages 1–2: Massacre (Space) & Settlement Raids (Ground)
 
@@ -116,8 +123,9 @@ Also:
 
 - **Works offline** — see [File access](#file-access) below; no web calls.
 - **Theme-aware** — the panel respects EDMC's light and dark themes.
-- Modern look: per-faction progress bars, section separators, and
-  right-aligned numeric columns that follow the EDMC theme.
+- Modern look: per-faction progress bars, section separators, and a
+  stacked-card layout (rather than a wide table) so it stays readable in
+  EDMC's narrow panel.
 
 ## Installation
 
