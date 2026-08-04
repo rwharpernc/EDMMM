@@ -785,8 +785,15 @@ class UI:
                           key=lambda m: (m.expiry == "", m.expiry))
         _display_all_missions_table(self.__popup_content, missions)
 
-        theme.update(self.__popup)
+        # theme.update() itself rejects a Toplevel outright ("Expected
+        # widget, got <class 'tkinter.Toplevel'>") - it's built for the
+        # regular widget tree, not a second top-level window. _apply_theme
+        # on the content frame (a plain Frame) still works fine; the
+        # Toplevel's own background is synced by hand instead, from
+        # self.__frame's already-themed background.
         _apply_theme(self.__popup_content)
+        if self.__frame is not None:
+            self.__popup.configure(background=self.__frame.cget("background"))
 
 
 ui = UI()
