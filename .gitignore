@@ -1,4 +1,4 @@
-# Build output — regenerate with scripts/build.ps1 (or the release workflow)
+# Build output — regenerate with scripts/build.py (or the release workflow)
 dist/
 
 # Runtime artifacts the plugin writes next to itself when EDMC runs it

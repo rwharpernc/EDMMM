@@ -40,7 +40,7 @@ Mission-category detection (`mission_types.py`) uses name-pattern matching again
 - It's almost always a missing hint string, not a logic bug.
 - PRs adding hints for mission types we don't recognize yet are especially welcome.
 
-Example: add the mission's internal name to the relevant category's `hints` set in `mission_types.py`.
+Example: add the mission's internal name to the relevant category's `_..._HINTS` tuple in `mission_types.py` (e.g. `_COMBAT_HINTS`, `_TRADE_HINTS`).
 
 ## Building from source / getting a local test build
 
