@@ -730,7 +730,15 @@ class UI:
             self.__refresh_popup()
             return
 
-        self.__popup = tk.Toplevel(self.__frame)
+        # Parented to the actual EDMC root window, not self.__frame: EDMC's
+        # own theme.update(self.__frame) - called on every panel refresh -
+        # recursively walks self.__frame's *widget-tree* children and
+        # doesn't know how to handle a Toplevel among them (raises
+        # "TypeError: Expected widget, got <class 'tkinter.Toplevel'>"),
+        # which was silently aborting the rest of update_ui() - including
+        # __refresh_popup() - every time a mission changed while this popup
+        # was open. Rooting it at the real toplevel keeps it out of that walk.
+        self.__popup = tk.Toplevel(self.__frame.winfo_toplevel())
         self.__popup.title("EDMMM - All Active Missions")
         self.__popup.columnconfigure(0, weight=1)
         self.__popup.rowconfigure(0, weight=1)
@@ -747,7 +755,17 @@ class UI:
         self.__popup.update_idletasks()
         width = min(max(self.__popup_content.winfo_reqwidth() + 20, 400), 800)
         height = min(max(self.__popup_content.winfo_reqheight() + 20, 200), 600)
-        self.__popup.geometry(f"{width}x{height}")
+
+        # Center over the EDMC window rather than leaving position to the
+        # platform default - on a multi-monitor setup, an unpositioned
+        # Toplevel doesn't reliably land on the same monitor as EDMC itself.
+        # Deliberately not clamped to >=0: a monitor to the left of/above the
+        # primary has negative virtual-screen coordinates, and clamping would
+        # push the popup onto the wrong monitor there.
+        master = self.__frame.winfo_toplevel()
+        x = master.winfo_rootx() + (master.winfo_width() - width) // 2
+        y = master.winfo_rooty() + (master.winfo_height() - height) // 2
+        self.__popup.geometry(f"{width}x{height}+{x}+{y}")
 
     def __close_popup(self):
         if self.__popup is not None:

@@ -98,6 +98,16 @@ it.
   window was opened for having since disappeared (handed in/abandoned/
   expired) - the "All missions" popup doesn't have this problem since it
   isn't tied to one mission.
+- **Parenting gotcha, learned the hard way in `v0.2.0-beta.1`:** the new
+  `Toplevel` must be parented to `self.__frame.winfo_toplevel()`, never to
+  `self.__frame`/`self.__content` or a mission row inside them - see
+  TECHNICAL_SPEC.md's "Gotcha for any future `Toplevel`" note. Getting this
+  wrong makes EDMC's `theme.update()` crash on every panel refresh while
+  the window is open, which silently breaks the *rest* of `update_ui()`
+  too (this is exactly what broke the "All missions" popup's live-refresh
+  before it was fixed). Also position it explicitly off the master's
+  `winfo_rootx()`/`winfo_rooty()` rather than leaving it to the platform
+  default, or it won't reliably open on the same monitor as EDMC.
 
 ### Show wing status and reward split on Pages 3–7
 

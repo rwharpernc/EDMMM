@@ -3,6 +3,16 @@
 All notable changes to this project are documented here. Versions match
 `EDMMM/version` and the git tag each release is built from.
 
+## [0.2.0-beta.2]
+
+- Fixed the "All missions" popup silently freezing (not reflecting
+  hand-ins/abandons/expiries) whenever a mission changed while it was open.
+  Caused by the popup being parented to the main panel's own content frame,
+  which made EDMC's per-refresh theme pass throw on it every time.
+- Fixed the "All missions" popup not reliably opening on the same monitor
+  as EDMC on multi-monitor setups — it now opens centered over EDMC's own
+  window instead of wherever Windows happened to default to.
+
 ## [0.2.0-beta.1]
 
 - Redesigned the panel's layout: entries now render as stacked 2–4 line

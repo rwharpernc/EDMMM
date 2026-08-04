@@ -123,6 +123,24 @@ small and updates are infrequent (a mission accept/complete/expire, or the
 rebuild-on-notify pattern: `update_ui` refreshes it too, whenever it's
 currently open.
 
+**Gotcha for any future `Toplevel`:** it must be parented to
+`self.__frame.winfo_toplevel()` (the actual EDMC root window), never to
+`self.__frame`/`self.__content` themselves or anything inside them. A
+`Toplevel` parented to a widget inside the panel becomes a child of that
+widget in Tk's own widget tree, and EDMC's `theme.update()` recursively
+walks a widget's children expecting only plain widgets — it raises
+`TypeError: Expected widget, got <class 'tkinter.Toplevel'>` the moment it
+encounters one, silently aborting the rest of `update_ui()` (this is
+exactly what broke the "All missions" popup's live-refresh in
+`v0.2.0-beta.1`: it was parented to `self.__frame`, so every mission
+change while it was open crashed `theme.update(self.__frame)` before
+`__refresh_popup()` ever ran). Positioning has the same "must anchor to
+the real toplevel" requirement for a different reason: an unpositioned
+`Toplevel` doesn't reliably land on the same monitor as EDMC on a
+multi-monitor setup, so its geometry is explicitly computed from
+`master.winfo_rootx()`/`winfo_rooty()` rather than left to the platform
+default.
+
 ```mermaid
 flowchart LR
     JF[Journal files] --> JS["journal_scan.py<br/>(startup backfill)"]
