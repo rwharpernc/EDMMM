@@ -1,0 +1,22 @@
+# Build output — regenerate with scripts/build.py (or the release workflow)
+dist/
+
+# Runtime artifacts the plugin writes next to itself when EDMC runs it
+EDMMM/logs/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+
+# Personal scratch notes, never committed
+PRIVATE_NOTES.md
+
+# Editor / OS cruft
+.idea/
+.vscode/
+*.swp
+.DS_Store
+Thumbs.db
