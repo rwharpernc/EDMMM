@@ -7,8 +7,12 @@ because kill-stacking math doesn't generalize to missions that have no kill
 count - see edmmm/mission_types.py for how a mission lands on a given page.
 
 Visual design notes:
-- All text widgets are plain tk and inherit EDMC's configured theme colors.
-  This is important for accessibility and for custom dark-theme text colors.
+- Text widgets are plain tk and inherit EDMC's configured theme colors by
+  default, for accessibility and custom dark-theme text colors. A widget
+  that sets its own `fg` at creation - before theme.update() ever sees it -
+  keeps that color permanently instead: EDMC's theme system only ever
+  auto-colors a widget's foreground if it didn't already have one at first
+  registration (see the nav arrows' ACCENT color below).
 - Kill progress is drawn as small Canvas bars; the drawn rectangles fully
   cover the canvas, so theming the canvas background is irrelevant.
 - EDMC's panel is narrow and its width isn't under this plugin's control, so
@@ -42,10 +46,12 @@ REFRESH_INTERVAL_MS = 60_000
 """How often the panel re-renders on its own, so mission expiry countdowns
 stay live without waiting for a journal event."""
 
-# Elite-style palette for non-text graphics only. Text colors are supplied by
-# EDMC so they retain sufficient contrast with the selected theme.
-ACCENT = "#ff8c0d"      # Elite orange - progress-bar fill, reads fine on both themes
-OK = "#71c837"          # complete / totals - progress-bar fill, reads fine on both themes
+# Elite-style accent palette, tuned to read fine on both EDMC's Default
+# (light, system-colored) and Dark/Transparent themes. Text colors are
+# otherwise left to EDMC so they retain contrast with the selected theme;
+# these are the deliberate exceptions (progress-bar fills, the nav arrows).
+ACCENT = "#ff8c0d"      # Elite orange - progress-bar fill, nav arrows
+OK = "#71c837"          # complete / totals - progress-bar fill
 
 # The separator line and the progress-bar track are flat grays, so unlike the
 # fill colors above they need their own light/dark variants: a single gray
@@ -76,11 +82,24 @@ def _bar_track_color() -> str:
 BAR_WIDTH = 64
 BAR_HEIGHT = 7
 
-_WRAP = 300
-"""Wrap width for lines that run the full panel width on their own."""
-_WRAP_NAME = 180
+_WRAP = 280
+"""Wrap width for lines that run the full panel width on their own.
+Recalculated from the panel's real measured width at the top of every
+update_ui() (see _recompute_wrap_widths) - EDMC panel width varies with the
+window, other docked plugins, and DPI scaling, so a fixed guess can't track
+it. This starting value only matters before the canvas has been realized
+once (see the winfo_width() > 1 guard in update_ui())."""
+_WRAP_NAME = 165
 """Wrap width for a name/faction label sharing a line with a right-anchored
-value (kills, reward) - narrower than _WRAP to leave that value room."""
+value (kills, reward) - narrower than _WRAP to leave that value room.
+Recalculated alongside _WRAP; see above."""
+_WRAP_NAME_ALLOWANCE = _WRAP - _WRAP_NAME
+"""How much narrower _WRAP_NAME stays than _WRAP once recalculated - the
+room reserved for the right-anchored value sharing its line."""
+_CONTENT_RIGHT_MARGIN = 8
+"""Extra inset subtracted from the content frame's width (see
+__on_canvas_resize), so right-anchored values (reward, kills, status) get a
+sliver of breathing room from the scrollbar too, not just wrapped text."""
 _URGENT_EXPIRY_MINUTES = 120
 """Below this many minutes left, a mission's expiry is shown as a warning."""
 
@@ -101,6 +120,16 @@ category with many missions (stacked cards run taller than the old
 multi-column rows did) would force the whole EDMC window past screen
 height. Below the cap the panel still just sizes to its content, same as
 before - the scrollbar only appears once it's actually needed."""
+
+
+def _recompute_wrap_widths(available_width: int) -> None:
+    """Derives _WRAP/_WRAP_NAME from the panel's real current width instead
+    of a fixed guess, since EDMC panel width isn't a constant across
+    installs (other docked plugins, window resizing, DPI scaling). Called
+    once at the top of update_ui() with the canvas's measured width."""
+    global _WRAP, _WRAP_NAME
+    _WRAP = max(available_width - _CONTENT_RIGHT_MARGIN, 80)
+    _WRAP_NAME = max(_WRAP - _WRAP_NAME_ALLOWANCE, 60)
 
 
 @dataclass
@@ -193,7 +222,10 @@ def _get_fonts() -> dict[str, tkfont.Font]:
         small.configure(size=max(abs(size) - 2, 7) * (-1 if size < 0 else 1))
         small_bold = small.copy()
         small_bold.configure(weight="bold")
-        _fonts.update(base=base, bold=bold, small=small, small_bold=small_bold)
+        nav_arrow = base.copy()
+        nav_arrow.configure(size=(abs(size) + 4) * (-1 if size < 0 else 1), weight="bold")
+        _fonts.update(base=base, bold=bold, small=small, small_bold=small_bold,
+                     nav_arrow=nav_arrow)
     return _fonts
 
 
@@ -319,27 +351,34 @@ def _display_no_missions(frame: tk.Frame, row: int, text: str) -> int:
 
 def _display_cmdr_header(frame: tk.Frame, cmdr: Optional[str], count: Optional[int],
                           settings: DisplaySettings, row: int) -> int:
-    """Header line: commander name + game mode on the left, total active
-    mission count (out of the game's 20-mission cap) on the right."""
+    """Header: commander name + mission count on one line, game mode on its
+    own line below ("You are in: Open mode.") - a separate line, not
+    appended to the name, since mode must still show when the name is
+    toggled off (they're independent settings)."""
     show_name = settings.cmdr_name and cmdr
     show_mode = settings.game_mode and cmdr
     show_count = settings.mission_count and count is not None
 
-    if not show_name and not show_count:
-        return row
+    if show_name or show_count:
+        line = _line(frame, row)
+        if show_name:
+            tk.Label(line, text=f"CMDR {cmdr}", font=_get_fonts()["bold"], anchor=tk.W).pack(
+                side=tk.LEFT, fill=tk.X, expand=True)
+        if show_count:
+            tk.Label(line, text=f"{count}/{MISSION_CAP}",
+                     font=_get_fonts()["small"]).pack(side=tk.RIGHT, anchor="ne")
+        row += 1
 
-    line = _line(frame, row)
-    if show_name:
-        text = f"CMDR {cmdr}"
-        mode_label = game_mode.label_for(cmdr) if show_mode else None
+    if show_mode:
+        mode_label = game_mode.label_for(cmdr)
         if mode_label:
-            text += f" — {mode_label}"
-        tk.Label(line, text=text, font=_get_fonts()["bold"], anchor=tk.W).pack(
-            side=tk.LEFT, fill=tk.X, expand=True)
-    if show_count:
-        tk.Label(line, text=f"{count}/{MISSION_CAP}",
-                 font=_get_fonts()["small"]).pack(side=tk.RIGHT, anchor="ne")
-    return row + 1
+            mode_line = _line(frame, row)
+            tk.Label(mode_line, text=f"You are in: {mode_label} mode.",
+                     font=_get_fonts()["small"], anchor=tk.W).pack(
+                side=tk.LEFT, fill=tk.X, expand=True)
+            row += 1
+
+    return row
 
 
 def _display_category_nav(frame: tk.Frame, current: str, counts: dict[str, int],
@@ -351,7 +390,12 @@ def _display_category_nav(frame: tk.Frame, current: str, counts: dict[str, int],
 
     fonts = _get_fonts()
 
-    prev_label = tk.Label(nav, text="◂", font=fonts["small_bold"], cursor="hand2")
+    # fg set at creation, before theme.update() ever sees these widgets -
+    # EDMC's theme system only auto-colors a widget's foreground if it
+    # doesn't already have one at first registration, so this survives
+    # every subsequent theme refresh instead of being overwritten back to
+    # the theme's plain text color.
+    prev_label = tk.Label(nav, text="◂", font=fonts["nav_arrow"], fg=ACCENT, cursor="hand2")
     prev_label.pack(side=tk.LEFT)
     prev_label.bind("<Button-1>", lambda _e: on_prev())
 
@@ -359,7 +403,7 @@ def _display_category_nav(frame: tk.Frame, current: str, counts: dict[str, int],
     all_label.pack(side=tk.RIGHT)
     all_label.bind("<Button-1>", lambda _e: on_show_all())
 
-    next_label = tk.Label(nav, text="▸", font=fonts["small_bold"], cursor="hand2")
+    next_label = tk.Label(nav, text="▸", font=fonts["nav_arrow"], fg=ACCENT, cursor="hand2")
     next_label.pack(side=tk.RIGHT, padx=(0, 8))
     next_label.bind("<Button-1>", lambda _e: on_next())
 
@@ -606,20 +650,36 @@ class UI:
 
         self.__frame.bind("<<Refresh>>", lambda _: self.update_ui())
         self.update_ui()
+        # This first update_ui() call almost always lands before Tk has
+        # given the canvas real geometry (winfo_width() still 1), so wrap
+        # widths fall back to the static defaults - re-run once shortly
+        # after so it self-corrects to the real panel width immediately,
+        # instead of visibly wrapping wrong until the next mission change
+        # or the 60s refresh tick.
+        self.__frame.after(100, self.__refresh_if_alive)
         self.__frame.after(REFRESH_INTERVAL_MS, self.__tick)
 
-    def __tick(self):
+    def __refresh_if_alive(self):
+        """update_ui(), but only if the frame is still a live widget - guards
+        scheduled (after()) callbacks that may fire post-teardown."""
         if self.__frame is None or not self.__frame.winfo_exists():
             return
         self.update_ui()
-        self.__frame.after(REFRESH_INTERVAL_MS, self.__tick)
+
+    def __tick(self):
+        self.__refresh_if_alive()
+        if self.__frame is not None and self.__frame.winfo_exists():
+            self.__frame.after(REFRESH_INTERVAL_MS, self.__tick)
 
     def __on_canvas_resize(self, event):
         """Keeps the content frame's width matched to the canvas (which
         tracks the EDMC window's actual width) so wraplength-based wrapping
         lines up with the visible area and only vertical scrolling is ever
-        needed."""
-        self.__canvas.itemconfigure(self.__content_window, width=event.width)
+        needed. Insets by _CONTENT_RIGHT_MARGIN so content never claims the
+        canvas's full width, leaving a sliver clear of the scrollbar for
+        right-anchored values that don't wrap."""
+        width = max(event.width - _CONTENT_RIGHT_MARGIN, 0)
+        self.__canvas.itemconfigure(self.__content_window, width=width)
 
     def __sync_scroll_region(self, _event=None):
         """Recomputes the scrollable region after content changes size, caps
@@ -735,6 +795,11 @@ class UI:
         if self.__frame is None or self.__content is None:
             logger.warning("Frame was not yet set. UI was not updated.")
             return
+
+        self.__canvas.update_idletasks()
+        canvas_width = self.__canvas.winfo_width()
+        if canvas_width > 1:  # not yet realized (e.g. very first call) - keep the fallback
+            _recompute_wrap_widths(canvas_width)
 
         for child in self.__content.winfo_children():
             child.destroy()

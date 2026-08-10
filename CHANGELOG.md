@@ -3,6 +3,30 @@
 All notable changes to this project are documented here. Versions match
 `EDMMM/version` and the git tag each release is built from.
 
+## [0.4.0]
+
+- The ◂ / ▸ category-nav arrows are now larger and colored (the same
+  Elite-orange accent already used for progress bars), so they read as
+  clickable controls rather than plain text - and stay legible on both
+  light and dark EDMC themes.
+- The header's game-mode line is now independent of the commander-name
+  setting - previously, turning off "Commander name" also hid the mode
+  (it was only ever attached to the name line). Mode now shows on its own
+  line ("You are in: Open mode.") whenever its own setting is on, with or
+  without the name.
+- Fixed full-width lines (mission names, destinations, warnings, etc.)
+  wrapping too early instead of using the panel's actual available width.
+  The wrap width used to be a fixed pixel guess that couldn't track EDMC's
+  real panel width (which varies with window size, other docked plugins,
+  and DPI scaling) - it's now measured from the panel's live width and
+  recalculated on every update, correcting itself shortly after startup
+  and on every mission/settings change from then on.
+- Fixed the scrollable panel's content running under the vertical
+  scrollbar once a category grew tall enough to show it, cutting off
+  wrapped text and right-anchored values (reward, kills, status) on the
+  right edge. The content area now reserves a small margin for the
+  scrollbar instead of claiming the panel's full width.
+
 ## [0.3.0]
 
 - Pages 3–7 mission cards: the mission name now gets its own full-width

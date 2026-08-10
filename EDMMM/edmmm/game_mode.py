@@ -30,8 +30,10 @@ def set_mode(cmdr: str, mode: Optional[str], group: Optional[str]):
 
 
 def label_for(cmdr: Optional[str]) -> Optional[str]:
-    """Human-readable mode label, e.g. "Open Mode", "Solo Mode", or "Private
-    Mode" (with the private group's name in parentheses if it has one)."""
+    """Human-readable mode label, e.g. "Open", "Solo", or "Private" (with
+    the private group's name in parentheses if it has one). Bare - callers
+    that need the word "mode" attached build that into their own sentence
+    (see ui.py's header, "You are in: <label> mode.")."""
     if cmdr is None:
         return None
     mode = _mode_by_cmdr.get(cmdr)
@@ -39,10 +41,8 @@ def label_for(cmdr: Optional[str]) -> Optional[str]:
         return None
     if mode == "Group":
         group = _group_by_cmdr.get(cmdr)
-        label = f"Private ({group})" if group else "Private"
-    else:
-        label = mode  # "Solo" / "Open" / "CQC"
-    return f"{label} Mode"
+        return f"Private ({group})" if group else "Private"
+    return mode  # "Solo" / "Open" / "CQC"
 
 
 def __emit_changed():
