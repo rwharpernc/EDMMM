@@ -24,6 +24,7 @@ Visual design notes:
   the left side can wrap onto extra lines without disturbing the right side.
 """
 import datetime as dt
+import random
 import tkinter as tk
 import tkinter.font as tkfont
 from dataclasses import dataclass, field
@@ -102,6 +103,18 @@ __on_canvas_resize), so right-anchored values (reward, kills, status) get a
 sliver of breathing room from the scrollbar too, not just wrapped text."""
 _URGENT_EXPIRY_MINUTES = 120
 """Below this many minutes left, a mission's expiry is shown as a warning."""
+
+_NO_MISSIONS_MESSAGES = (
+    "No missions. Go get some!",
+    "Board's empty, CMDR.",
+    "Nothing assigned. Time to hunt.",
+    "All quiet. Go stir something up.",
+    "No missions. The stars await.",
+)
+"""Flavor text for the "nothing assigned at all" empty state - picked at
+random on each render, purely cosmetic. Per-category empty pages
+(_render_current_page's no_missions_text) stay literal since they name the
+specific category, which is useful information while paging through."""
 
 _LINE_PAD = 2
 """Vertical gap between the stacked lines within one card - without it a
@@ -203,7 +216,6 @@ class DisplaySettings:
         self.sum = config.display_sum_row
         self.mission_count = config.display_mission_count
         self.settlement = config.display_settlement
-        self.cmdr_name = config.display_cmdr_name
         self.game_mode = config.display_game_mode
 
 
@@ -351,22 +363,17 @@ def _display_no_missions(frame: tk.Frame, row: int, text: str) -> int:
 
 def _display_cmdr_header(frame: tk.Frame, cmdr: Optional[str], count: Optional[int],
                           settings: DisplaySettings, row: int) -> int:
-    """Header: commander name + mission count on one line, game mode on its
-    own line below ("You are in: Open mode.") - a separate line, not
-    appended to the name, since mode must still show when the name is
-    toggled off (they're independent settings)."""
-    show_name = settings.cmdr_name and cmdr
+    """Header: mission count on one line ("Missions: 3/20"), game mode on
+    its own line below ("You are in: Open mode.") - independent lines since
+    either can be toggled off on its own."""
     show_mode = settings.game_mode and cmdr
     show_count = settings.mission_count and count is not None
 
-    if show_name or show_count:
+    if show_count:
         line = _line(frame, row)
-        if show_name:
-            tk.Label(line, text=f"CMDR {cmdr}", font=_get_fonts()["bold"], anchor=tk.W).pack(
-                side=tk.LEFT, fill=tk.X, expand=True)
-        if show_count:
-            tk.Label(line, text=f"{count}/{MISSION_CAP}",
-                     font=_get_fonts()["small"]).pack(side=tk.RIGHT, anchor="ne")
+        tk.Label(line, text=f"Missions: {count}/{MISSION_CAP}",
+                 font=_get_fonts()["bold"], anchor=tk.W).pack(
+            side=tk.LEFT, fill=tk.X, expand=True)
         row += 1
 
     if show_mode:
@@ -812,7 +819,7 @@ class UI:
             row = _display_cmdr_header(self.__content, kill_tracker.current_cmdr,
                                         total, self.__settings, 0)
             if sum(counts.values()) == 0:
-                _display_no_missions(self.__content, row, "No missions currently assigned.")
+                _display_no_missions(self.__content, row, random.choice(_NO_MISSIONS_MESSAGES))
             else:
                 self.__ensure_valid_category(counts)
                 row = _display_category_nav(self.__content, self.__current_category,

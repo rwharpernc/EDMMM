@@ -118,9 +118,9 @@ reward with no wing indicator.
 
 The header shows:
 
-- The active commander, plus their current **game mode** (Solo / Open /
-  Private Group with the group's name / CQC).
 - Total active mission count (x/20 — the game's own mission cap).
+- Your current **game mode** (Solo / Open / Private Group with the group's
+  name / CQC).
 - **Per-commander profiles**: every mission, kill, and progress figure is
   tracked separately per CMDR. Switching commanders switches the whole view;
   one commander's missions can never bleed into another's. This is what
@@ -211,7 +211,6 @@ has a checkbox for each of these, all on by default:
 - Sum row (per-faction totals on the massacre pages)
 - Mission count badge
 - Target settlement list (Ground page)
-- Commander name
 - Game mode
 
 The tab also shows the installed plugin version and the location of its

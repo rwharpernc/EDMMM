@@ -76,7 +76,7 @@ Each mission shows: giver faction, status (**Pending** or **✓ Complete** — c
 
 ### Header & General
 
-- **Header shows your active commander**, current game mode (Solo / Open / Private Group with group name / CQC), and total mission count (x/20 — the game's limit).
+- **Header shows total mission count** (x/20 — the game's limit) and current game mode (Solo / Open / Private Group with group name / CQC).
 - **Per-commander profiles** — each commander's missions, kills, and progress are tracked separately; switching commanders switches the entire view. This is what makes EDMMM alt-friendly.
 - **Works offline** — the plugin only reads your local journal files. No web calls, no external dependencies.
 - **Theme-aware** — the panel respects EDMC's light and dark themes, so it's readable no matter which one you use.
@@ -91,7 +91,6 @@ The plugin's options tab is in EDMC under **File → Settings → EDMMM**. It ha
 - Sum row (per-faction totals on the massacre pages)
 - Mission count badge
 - Target settlement list (Ground page)
-- Commander name
 - Game mode
 
 The tab also shows the installed plugin version and the location of its log file.

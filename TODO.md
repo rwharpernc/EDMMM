@@ -49,21 +49,6 @@ the panel like any other mission.
   count/warning (like the existing multi-faction/multi-system warnings)
   rather than a simple per-row flag.
 
-### Show current ship name instead of commander name in the header
-
-**Goal:** Replace the commander name on the header's first line with the
-current ship name.
-
-**R&D notes:**
-- Not tracked at all today - no code reads the `Loadout` or
-  `SetUserShipName` events.
-- Needs a real journal capture to confirm which event/field actually
-  holds the custom ship name.
-- Needs a fallback for on-foot/SRV states where there's no "current
-  ship".
-- Decide whether this reuses the existing "Display Commander Name"
-  setting or needs its own toggle.
-
 ### Clickable mission rows that open a details window
 
 **Goal:** Click a tracked mission to open a window with more detail on

@@ -5,6 +5,12 @@ All notable changes to this project are documented here. Versions match
 
 ## [0.4.0]
 
+- The "no missions assigned at all" empty state now picks one of a handful
+  of random flavor-text lines instead of always showing the same plain
+  message.
+- Removed the commander name from the header entirely (and the "Display
+  Commander Name" setting along with it) - the header's first line is now
+  the mission count, formatted as "Missions: 3/20".
 - The ◂ / ▸ category-nav arrows are now larger and colored (the same
   Elite-orange accent already used for progress bars), so they read as
   clickable controls rather than plain text - and stay legible on both
