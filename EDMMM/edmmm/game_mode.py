@@ -30,7 +30,8 @@ def set_mode(cmdr: str, mode: Optional[str], group: Optional[str]):
 
 
 def label_for(cmdr: Optional[str]) -> Optional[str]:
-    """Human-readable mode label, e.g. "Open", "Solo", "Private (Wolf Pack)"."""
+    """Human-readable mode label, e.g. "Open Mode", "Solo Mode", or "Private
+    Mode" (with the private group's name in parentheses if it has one)."""
     if cmdr is None:
         return None
     mode = _mode_by_cmdr.get(cmdr)
@@ -38,8 +39,10 @@ def label_for(cmdr: Optional[str]) -> Optional[str]:
         return None
     if mode == "Group":
         group = _group_by_cmdr.get(cmdr)
-        return f"Private ({group})" if group else "Private"
-    return mode  # "Solo" / "Open" / "CQC"
+        label = f"Private ({group})" if group else "Private"
+    else:
+        label = mode  # "Solo" / "Open" / "CQC"
+    return f"{label} Mode"
 
 
 def __emit_changed():

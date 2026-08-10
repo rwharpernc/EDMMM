@@ -64,14 +64,6 @@ current ship name.
 - Decide whether this reuses the existing "Display Commander Name"
   setting or needs its own toggle.
 
-### Add the word "Mode" to the mode indicator
-
-**Goal:** Header should read e.g. "Open Mode" instead of just "Open".
-
-**R&D notes:**
-- Simple wording change in `game_mode.label_for` / the header text in
-  `ui.py`. No open questions.
-
 ### Clickable mission rows that open a details window
 
 **Goal:** Click a tracked mission to open a window with more detail on

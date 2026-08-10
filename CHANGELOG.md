@@ -3,6 +3,11 @@
 All notable changes to this project are documented here. Versions match
 `EDMMM/version` and the git tag each release is built from.
 
+## [Unreleased]
+
+- The header's game-mode indicator now reads e.g. "Open Mode" / "Solo Mode"
+  / "Private Mode" instead of just "Open" / "Solo" / "Private".
+
 ## [0.3.0-beta.1]
 
 - Cleaned up crowded, hard-to-scan card layout: added spacing between the
