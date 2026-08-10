@@ -57,7 +57,7 @@ This reads `EDMMM/version`, copies the plugin into `dist/EDMMM/` (drop that fold
 
 Releases are cut from git tags:
 
-1. Bump `EDMMM/version` (plain semver, e.g. `0.2.0`, no `v` prefix) and land it on `main`. Update `CHANGELOG.md`.
+1. Bump `EDMMM/version` (plain semver, e.g. `0.2.0`, no `v` prefix) and land it on `master`. Update `CHANGELOG.md`.
 2. For alpha/beta releases, use pre-release identifiers: `0.2.0-alpha.1`, `0.2.0-beta.1`, etc.
 3. Tag the commit and push the tag: `git tag v0.2.0 && git push origin v0.2.0`.
 4. GitHub Actions ([`.github/workflows/release.yml`](.github/workflows/release.yml)) builds `dist/EDMMM-v0.2.0.zip` and publishes it as a GitHub Release with auto-generated release notes.
@@ -67,4 +67,4 @@ Releases are cut from git tags:
 
 ## CI/CD
 
-A smoke-test workflow ([`.github/workflows/ci.yml`](.github/workflows/ci.yml)) byte-compiles the plugin and runs the build script on every push/PR to `main`.
+A smoke-test workflow ([`.github/workflows/ci.yml`](.github/workflows/ci.yml)) byte-compiles the plugin and runs the build script on every push/PR to `master`.

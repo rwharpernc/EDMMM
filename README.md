@@ -1,5 +1,7 @@
 # Elite Dangerous: My Mission Manager (EDMMM) — An EDMC Plugin
 
+EDMC plugin that shows every active mission — with detailed kill-progress tracking for stacked massacre/settlement-raid missions.
+
 [![Release](https://img.shields.io/github/v/release/rwharpernc/EDMMM?sort=semver)](https://github.com/rwharpernc/EDMMM/releases/latest)
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](LICENSE)
 

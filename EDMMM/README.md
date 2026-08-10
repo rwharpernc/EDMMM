@@ -1,5 +1,7 @@
 # EDMMM — Elite Dangerous: My Mission Manager (An EDMC Plugin)
 
+EDMC plugin that shows every active mission — with detailed kill-progress tracking for stacked massacre/settlement-raid missions.
+
 **Author:** R.W. Harper (CMDR Mactavious) | **License:** GPLv3
 
 *Roughly 30% of this codebase was written with AI pair-programming assistance (Claude / Claude Code).*
@@ -36,7 +38,7 @@ with you.
 ## Features
 
 Several new features are currently under research and design — see
-[TODO.md](https://github.com/rwharpernc/EDMMM/blob/main/TODO.md) for
+[TODO.md](https://github.com/rwharpernc/EDMMM/blob/master/TODO.md) for
 what's being explored.
 
 ### Navigation
