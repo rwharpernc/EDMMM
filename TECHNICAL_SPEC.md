@@ -107,7 +107,12 @@ specialized view of it:
 evidence per CMDR, independent of which specific missions exist right now.
 `massacre_state.compute_progress()` is what ties the two together — kill
 progress isn't stored, it's recomputed from current mission + kill state
-every time it's needed.
+every time it's needed. `ui.py` does the same thing directly for Pages
+3–7's per-mission Pending/Complete status and drop-off location — see
+"Pending/Complete status and drop-off location" below — which is also why
+`mission_state.py` subscribes to `kill_tracker.kill_data_changed_listeners`
+purely to re-emit and trigger a redraw, the same way `massacre_state.py`
+does.
 
 **`game_mode.py`** is a third, independent per-CMDR store, fed only by
 `LoadGame` events, for the header's mode label.
@@ -152,7 +157,8 @@ flowchart LR
     MR --> MS["mission_state.py<br/>(All Missions view)"]
     MR --> MC["massacre_state.py<br/>(kill-stacking view)"]
     KT --> MC
-    MS --> UI["ui.py<br/>(Tkinter panel)"]
+    KT -."status + drop-off,<br/>read live".-> UI["ui.py<br/>(Tkinter panel)"]
+    MS --> UI
     MC --> UI
     GM --> UI
     CFG["settings.py /<br/>EDMC config store"] --> UI
@@ -287,6 +293,34 @@ Concretely:
 This isn't a bug to fix so much as a hard ceiling imposed by what the
 journal exposes: wing-mission progress should be read as "at least this
 many, confirmed done the moment it flips."
+
+## Pending/Complete status and drop-off location (Pages 3–7)
+
+Unlike kill progress, this isn't stored or computed by `mission_state.py`
+at all — `Mission` carries no status field. `ui.py` reads `kill_tracker`
+directly at render time (`_mission_status()`/`_mission_location()` in
+`ui.py`), the same pattern `massacre_state.compute_progress()` already uses:
+a mission is "Complete" purely by virtue of its ID being in
+`kill_tracker.get_redirected()`, reusing the exact signal massacre progress
+treats as authoritative — see "Why redirected overrides the estimate"
+above. Nothing new is inferred; this just surfaces a signal the plugin was
+already collecting for every mission type, not only massacre ones.
+
+The drop-off location follows the same live-read pattern:
+`MissionRedirected` events are captured with their
+`NewDestinationStation`/`NewDestinationSystem` fields (when present) in
+`kill_tracker._redirect_destinations`, seeded from the journal backfill via
+`journal_scan.ScanResult.redirect_destinations_by_cmdr`. Once a mission is
+complete, `ui.py` shows that new location instead of the mission's original
+destination; if the event carried no new destination (observed for at
+least some mission types), it falls back to the original one.
+
+Because nothing is baked into `Mission` at build time, live updates need
+their own path: `mission_state.py` subscribes to
+`kill_tracker.kill_data_changed_listeners` (`refresh()`) purely to re-emit
+its already-built `_mission_store` unchanged, the same way
+`massacre_state.refresh()` does — the re-emit is what triggers `ui.py` to
+redraw, and the redraw is what re-reads `kill_tracker` for current status.
 
 ## Config & persistence
 

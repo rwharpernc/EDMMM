@@ -70,7 +70,7 @@ These two pages track the *same* underlying mission type — one with a kill cou
 - **Covert / On-Foot Ops** — hacking, sabotage, heists, and other on-foot missions that aren't settlement raids.
 - **Other** — anything that doesn't fit the above (a handful of obscure or new mission types may land here until their naming pattern is recognized).
 
-Each mission shows: destination, reward, and time until expiry (soonest-expiring first). Missions the game flags as **illegal** are marked so you know which ones break laws.
+Each mission shows: giver faction, status (**Pending** or **✓ Complete** — complete once the game confirms the objective is done and redirects you back to turn it in), the location to go to (the redirect's new turn-in location once complete, otherwise the original destination), reward, and time until expiry (soonest-expiring first). Missions the game flags as **illegal** are marked so you know which ones break laws.
 
 **Wing missions** (Wing Mining, Wing Trading, Wing Massacre, etc.) are tracked and categorized the same as any other mission, but the wing-shareable reward split is currently only displayed on the Massacre & Settlement Raids pages above — pages 3–7 show the full reward with no wing indicator.
 

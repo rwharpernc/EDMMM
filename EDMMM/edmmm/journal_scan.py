@@ -34,6 +34,10 @@ class ScanResult:
     """CMDR -> list of Bounty events, in journal order"""
     redirected_by_cmdr: dict[str, set[int]] = field(default_factory=dict)
     """CMDR -> Mission IDs that received a MissionRedirected event"""
+    redirect_destinations_by_cmdr: dict[str, dict[int, dict]] = field(default_factory=dict)
+    """CMDR -> (Mission ID -> {"station": ..., "system": ...}), the
+    redirect's new turn-in location - only present when the event carried
+    NewDestinationStation/NewDestinationSystem."""
     mode_by_cmdr: dict[str, str] = field(default_factory=dict)
     """CMDR -> game mode from their most recent LoadGame event"""
     group_by_cmdr: dict[str, str] = field(default_factory=dict)
@@ -80,8 +84,15 @@ def __scan_one_log(file_path: Path, result: ScanResult):
                     elif event == "Bounty":
                         result.bounties_by_cmdr.setdefault(cmdr, []).append(line_as_json)
                     elif event == "MissionRedirected":
-                        result.redirected_by_cmdr.setdefault(cmdr, set()).add(
-                            line_as_json["MissionID"])
+                        mission_id = line_as_json["MissionID"]
+                        result.redirected_by_cmdr.setdefault(cmdr, set()).add(mission_id)
+                        new_station = line_as_json.get("NewDestinationStation")
+                        new_system = line_as_json.get("NewDestinationSystem")
+                        if new_station or new_system:
+                            result.redirect_destinations_by_cmdr.setdefault(cmdr, {})[mission_id] = {
+                                "station": new_station or "",
+                                "system": new_system or "",
+                            }
                     elif event == "LoadGame":
                         # Mirrors EDMC's own CQC detection: no Ship and no
                         # GameMode (or GameMode == "CQC") means CQC.

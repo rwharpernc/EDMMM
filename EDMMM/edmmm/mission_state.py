@@ -8,6 +8,7 @@ kill-stacking math.
 from dataclasses import dataclass
 from typing import Callable, Optional
 
+import edmmm.kill_tracker as kill_tracker
 import edmmm.mission_repository as mission_repository
 import edmmm.mission_types as mission_types
 from edmmm.logger_factory import logger
@@ -89,4 +90,14 @@ def __emit():
         listener(_mission_store)
 
 
+def refresh():
+    """Re-emit the current store (e.g. after a live MissionRedirected event),
+    so ui.py's per-mission Pending/Complete status and drop-off location -
+    read live from kill_tracker at render time, not stored here - redraw
+    with the latest data instead of waiting for the mission set to change."""
+    if _mission_store is not None:
+        __emit()
+
+
 mission_repository.active_missions_changed_event_listeners.append(__handle_new_missions_state)
+kill_tracker.kill_data_changed_listeners.append(refresh)

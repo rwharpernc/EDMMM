@@ -97,7 +97,10 @@ in-game.
   missions that aren't settlement raids.
 - **Other** — everything that doesn't fit the above.
 
-Pages 3–7 are a plain list: mission name, giver faction, destination,
+Pages 3–7 are a plain list: mission name, giver faction, status (**Pending**
+or **✓ Complete** once the game confirms the objective is done and
+redirects you back to turn it in), the location to go to (the redirect's
+new turn-in location once complete, otherwise the original destination),
 reward, and time left, soonest-expiring first. Missions flagged **illegal**
 by the game (smuggling, illegal cargo, etc.) are marked wherever they land,
 since illegality cuts across types rather than being its own category.

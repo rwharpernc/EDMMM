@@ -43,12 +43,13 @@ def plugin_start3(_plugin_dir: str) -> str:
         )
         mission_repository_module.set_new_repo(scan_result.missions_by_cmdr)
         kill_tracker.initialize(scan_result.bounties_by_cmdr,
-                                scan_result.redirected_by_cmdr)
+                                scan_result.redirected_by_cmdr,
+                                scan_result.redirect_destinations_by_cmdr)
         game_mode.initialize(scan_result.mode_by_cmdr, scan_result.group_by_cmdr)
     except Exception:
         logger.exception("Journal scan failed - starting with empty state")
         mission_repository_module.set_new_repo({})
-        kill_tracker.initialize({}, {})
+        kill_tracker.initialize({}, {}, {})
         game_mode.initialize({}, {})
 
     logger.info("Awaiting Missions-Event to build the active mission list")
@@ -87,9 +88,9 @@ def journal_entry(cmdr: str, _is_beta: bool, _system: str,
         kill_tracker.forget_mission(cmdr, entry["MissionID"])
 
     elif event == "MissionRedirected":
-        # Fired when a mission objective is complete (all targets killed) and
-        # the game redirects you back to the mission giver.
-        kill_tracker.add_redirect(cmdr, entry["MissionID"])
+        # Fired when a mission objective is complete and the game redirects
+        # you back to turn it in - possibly at a new station/system.
+        kill_tracker.add_redirect(cmdr, entry)
 
     elif event == "Bounty":
         # Fired for both ship kills and on-foot kills of wanted targets.

@@ -3,8 +3,16 @@
 All notable changes to this project are documented here. Versions match
 `EDMMM/version` and the git tag each release is built from.
 
-## [Unreleased]
+## [0.3.0]
 
+- Pages 3–7 mission cards: the mission name now gets its own full-width
+  line instead of sharing one with the reward, so it only wraps once it
+  hits the actual panel width instead of a narrow shared column.
+- Pages 3–7 mission cards now show a status ("Pending" / "✓ Complete",
+  based on the same MissionRedirected signal already used for massacre
+  kill-stack completion) and, once complete, the redirect's new turn-in
+  location if the game sent one - falling back to the original destination
+  otherwise.
 - The header's game-mode indicator now reads e.g. "Open Mode" / "Solo Mode"
   / "Private Mode" instead of just "Open" / "Solo" / "Private".
 

@@ -251,10 +251,34 @@ def _format_expiry(expiry_iso: str) -> tuple[str, bool]:
     return text, total_minutes <= _URGENT_EXPIRY_MINUTES
 
 
+def _format_location(system: str, station: str) -> str:
+    if station and system:
+        return f"{system} / {station}"
+    return station or system or "-"
+
+
 def _format_destination(mission: mission_state.Mission) -> str:
-    if mission.destination_station and mission.destination_system:
-        return f"{mission.destination_system} / {mission.destination_station}"
-    return mission.destination_station or mission.destination_system or "-"
+    return _format_location(mission.destination_system, mission.destination_station)
+
+
+def _mission_status(mission_id: int, cmdr: Optional[str]) -> tuple[bool, str]:
+    """(is_complete, status text). A mission is "Complete" once its
+    MissionRedirected event has fired - the same authoritative signal
+    massacre_state.py uses for kill-stack completion, just applied generically
+    here rather than to a kill count."""
+    is_complete = mission_id in kill_tracker.get_redirected(cmdr)
+    return is_complete, ("✓ Complete" if is_complete else "Pending")
+
+
+def _mission_location(mission: mission_state.Mission, cmdr: Optional[str], is_complete: bool) -> str:
+    """Where to go right now: the redirect's new turn-in location once a
+    mission is complete (if the event carried one), else its original
+    destination."""
+    if is_complete:
+        dropoff = kill_tracker.get_redirect_destination(cmdr, mission.id)
+        if dropoff and (dropoff.get("station") or dropoff.get("system")):
+            return _format_location(dropoff.get("system", ""), dropoff.get("station", ""))
+    return _format_destination(mission)
 
 
 def _separator(frame: tk.Frame, row: int, pady: int = 3) -> int:
@@ -434,17 +458,19 @@ def _display_massacre_data(frame: tk.Frame, data: MassacreData, settings: Displa
 
 def _display_all_missions_row(frame: tk.Frame, mission: mission_state.Mission,
                                row: int) -> int:
-    """A mission as a stacked card: name + reward on top, then faction,
-    destination, and expiry each on their own line so long names/factions
-    wrap instead of overflowing the panel."""
+    """A mission as a stacked card, one field per line: name, faction,
+    status + reward, location, expiry. The name gets a full-width line to
+    itself (rather than sharing one with the reward) so it only wraps once
+    it hits the panel's actual width, not a narrow column."""
     fonts = _get_fonts()
+    cmdr = kill_tracker.current_cmdr
+    is_complete, status_text = _mission_status(mission.id, cmdr)
     name_text = f"{mission.name}  ⚠ Illegal" if mission.is_illegal else mission.name
     reward_text = _fmt_millions(mission.reward) if mission.reward else "-"
 
-    top = _line(frame, row, pady=(0, _LINE_PAD))
-    tk.Label(top, text=name_text, wraplength=_WRAP_NAME, justify=tk.LEFT,
+    name_line = _line(frame, row, pady=(0, _LINE_PAD))
+    tk.Label(name_line, text=name_text, wraplength=_WRAP, justify=tk.LEFT,
              anchor=tk.W, font=fonts["bold"]).pack(side=tk.LEFT, fill=tk.X, expand=True)
-    tk.Label(top, text=reward_text).pack(side=tk.RIGHT, anchor="ne")
     row += 1
 
     faction_line = _line(frame, row, pady=(0, _LINE_PAD))
@@ -452,8 +478,14 @@ def _display_all_missions_row(frame: tk.Frame, mission: mission_state.Mission,
              justify=tk.LEFT, font=fonts["small"]).pack(side=tk.LEFT)
     row += 1
 
+    status_line = _line(frame, row, pady=(0, _LINE_PAD))
+    tk.Label(status_line, text=status_text, font=fonts["small"]).pack(side=tk.LEFT)
+    tk.Label(status_line, text=reward_text).pack(side=tk.RIGHT, anchor="ne")
+    row += 1
+
+    location = _mission_location(mission, cmdr, is_complete)
     dest_line = _line(frame, row, pady=(0, _LINE_PAD))
-    tk.Label(dest_line, text="→ " + _format_destination(mission), wraplength=_WRAP,
+    tk.Label(dest_line, text="→ " + location, wraplength=_WRAP,
              justify=tk.LEFT, font=fonts["small"]).pack(side=tk.LEFT)
     row += 1
 

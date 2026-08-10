@@ -1,10 +1,16 @@
 """
-Tracks kill evidence used to estimate massacre mission progress:
+Tracks per-mission completion evidence, keyed by CMDR and independent of
+which specific missions are currently active:
 
 - Bounty events: fired for ship kills AND on-foot kills of wanted targets.
   The VictimFaction field tells us which faction the victim belonged to.
+  Used by massacre_state.py to estimate kill-stacking progress.
 - MissionRedirected events: fired when a mission's objective is complete
-  (all required kills done). This is the authoritative completion signal.
+  and the game sends you back to turn it in. This is the authoritative
+  completion signal for any mission type, not just massacre - ui.py uses
+  plain membership in `_redirected` as the "Pending"/"Complete" status shown
+  on the All Missions pages, and NewDestinationStation/System (when present)
+  as the drop-off location to show once complete.
 """
 from typing import Callable, Optional
 
@@ -14,6 +20,9 @@ current_cmdr: Optional[str] = None
 
 _bounties: dict[str, list[dict]] = {}
 _redirected: dict[str, set[int]] = {}
+_redirect_destinations: dict[str, dict[int, dict]] = {}
+"""CMDR -> (Mission ID -> {"station": ..., "system": ...}), only present
+when the MissionRedirected event carried a new turn-in location."""
 
 # Notified (no arguments) whenever kill data changes and progress should be
 # recomputed.
@@ -21,11 +30,13 @@ kill_data_changed_listeners: list[Callable[[], None]] = []
 
 
 def initialize(bounties_by_cmdr: dict[str, list[dict]],
-               redirected_by_cmdr: dict[str, set[int]]):
+               redirected_by_cmdr: dict[str, set[int]],
+               redirect_destinations_by_cmdr: Optional[dict[str, dict[int, dict]]] = None):
     """Seed the tracker with data recovered from the journal scan."""
-    global _bounties, _redirected
+    global _bounties, _redirected, _redirect_destinations
     _bounties = bounties_by_cmdr
     _redirected = redirected_by_cmdr
+    _redirect_destinations = redirect_destinations_by_cmdr or {}
 
 
 def set_current_cmdr(cmdr: str):
@@ -46,6 +57,15 @@ def get_redirected(cmdr: Optional[str]) -> set[int]:
     return _redirected.get(cmdr, set())
 
 
+def get_redirect_destination(cmdr: Optional[str], mission_id: int) -> Optional[dict]:
+    """The redirect's new turn-in location ({"station", "system"}), or None
+    if this mission was never redirected or the event carried no
+    destination change."""
+    if cmdr is None:
+        return None
+    return _redirect_destinations.get(cmdr, {}).get(mission_id)
+
+
 def add_bounty(cmdr: str, entry: dict):
     if not cmdr:
         return
@@ -53,11 +73,19 @@ def add_bounty(cmdr: str, entry: dict):
     __emit_changed()
 
 
-def add_redirect(cmdr: str, mission_id: int):
+def add_redirect(cmdr: str, entry: dict):
     if not cmdr:
         return
+    mission_id = entry["MissionID"]
     logger.info(f"Mission {mission_id} redirected -> objective complete")
     _redirected.setdefault(cmdr, set()).add(mission_id)
+    new_station = entry.get("NewDestinationStation")
+    new_system = entry.get("NewDestinationSystem")
+    if new_station or new_system:
+        _redirect_destinations.setdefault(cmdr, {})[mission_id] = {
+            "station": new_station or "",
+            "system": new_system or "",
+        }
     __emit_changed()
 
 
@@ -66,6 +94,7 @@ def forget_mission(cmdr: str, mission_id: int):
     if not cmdr:
         return
     _redirected.setdefault(cmdr, set()).discard(mission_id)
+    _redirect_destinations.get(cmdr, {}).pop(mission_id, None)
 
 
 def is_ground_kill(bounty: dict) -> bool:
