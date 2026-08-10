@@ -3,6 +3,14 @@
 All notable changes to this project are documented here. Versions match
 `EDMMM/version` and the git tag each release is built from.
 
+## [0.3.0-beta.1]
+
+- Cleaned up crowded, hard-to-scan card layout: added spacing between the
+  stacked lines within a card, and a separator between one entry and the
+  next (faction stacks on Pages 1–2, mission cards on Pages 3–7, and rows
+  in the "All missions" popup table), so entries read as distinct rows
+  instead of running together.
+
 ## [0.2.0-beta.2]
 
 - Fixed the "All missions" popup silently freezing (not reflecting

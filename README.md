@@ -5,6 +5,8 @@
 
 **Author:** R.W. Harper (CMDR Mactavious) | **License:** GPLv3 (see [LICENSE](LICENSE))
 
+*Roughly 30% of this codebase was written with AI pair-programming assistance (Claude / Claude Code); the `.claude/` folder in this repo holds the project-level configuration used for that.*
+
 ## Contents
 
 - [Requirement](#requirement)

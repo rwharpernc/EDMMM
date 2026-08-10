@@ -2,6 +2,8 @@
 
 **Author:** R.W. Harper (CMDR Mactavious) | **License:** GPLv3
 
+*Roughly 30% of this codebase was written with AI pair-programming assistance (Claude / Claude Code).*
+
 ## Contents
 
 - [Requirement](#requirement)

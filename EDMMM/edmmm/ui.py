@@ -84,6 +84,14 @@ value (kills, reward) - narrower than _WRAP to leave that value room."""
 _URGENT_EXPIRY_MINUTES = 120
 """Below this many minutes left, a mission's expiry is shown as a warning."""
 
+_LINE_PAD = 2
+"""Vertical gap between the stacked lines within one card - without it a
+2-4 line card reads as one crushed paragraph instead of a legible group."""
+_CARD_GAP = 4
+"""Vertical padding on each side of the separator drawn between one card
+(a faction stack, a mission) and the next, so entries read as distinct rows
+instead of running together."""
+
 _MASSACRE_CATEGORIES = (mission_types.MASSACRE_SPACE, mission_types.MASSACRE_GROUND)
 
 _MAX_PANEL_HEIGHT = 480
@@ -344,7 +352,7 @@ def _display_row(frame: tk.Frame, faction: str, data: FactionState, mission_data
     on top, progress bar + reward (+ delta) below."""
     kills_text = f"{data.done}/{data.required}" if settings.progress else str(data.required)
 
-    top = _line(frame, row)
+    top = _line(frame, row, pady=(0, _LINE_PAD))
     tk.Label(top, text=faction, wraplength=_WRAP_NAME, justify=tk.LEFT, anchor=tk.W).pack(
         side=tk.LEFT, fill=tk.X, expand=True)
     tk.Label(top, text=kills_text).pack(side=tk.RIGHT, anchor="ne")
@@ -410,7 +418,9 @@ def _display_massacre_data(frame: tk.Frame, data: MassacreData, settings: Displa
     if data.mission_count == 0:
         return _display_no_missions(frame, row, no_missions_text)
 
-    for faction in sorted(data.faction_rows.keys()):
+    for i, faction in enumerate(sorted(data.faction_rows.keys())):
+        if i > 0:
+            row = _separator(frame, row, pady=_CARD_GAP)
         row = _display_row(frame, faction, data.faction_rows[faction], data, settings, row)
     if settings.sum:
         row = _display_sum(frame, data, settings, row)
@@ -431,18 +441,18 @@ def _display_all_missions_row(frame: tk.Frame, mission: mission_state.Mission,
     name_text = f"{mission.name}  ⚠ Illegal" if mission.is_illegal else mission.name
     reward_text = _fmt_millions(mission.reward) if mission.reward else "-"
 
-    top = _line(frame, row)
+    top = _line(frame, row, pady=(0, _LINE_PAD))
     tk.Label(top, text=name_text, wraplength=_WRAP_NAME, justify=tk.LEFT,
              anchor=tk.W, font=fonts["bold"]).pack(side=tk.LEFT, fill=tk.X, expand=True)
     tk.Label(top, text=reward_text).pack(side=tk.RIGHT, anchor="ne")
     row += 1
 
-    faction_line = _line(frame, row)
+    faction_line = _line(frame, row, pady=(0, _LINE_PAD))
     tk.Label(faction_line, text=mission.source_faction, wraplength=_WRAP,
              justify=tk.LEFT, font=fonts["small"]).pack(side=tk.LEFT)
     row += 1
 
-    dest_line = _line(frame, row)
+    dest_line = _line(frame, row, pady=(0, _LINE_PAD))
     tk.Label(dest_line, text="→ " + _format_destination(mission), wraplength=_WRAP,
              justify=tk.LEFT, font=fonts["small"]).pack(side=tk.LEFT)
     row += 1
@@ -450,7 +460,7 @@ def _display_all_missions_row(frame: tk.Frame, mission: mission_state.Mission,
     expiry_text, urgent = _format_expiry(mission.expiry)
     if urgent:
         expiry_text = "⚠ " + expiry_text
-    expiry_line = _line(frame, row, pady=(0, 4))
+    expiry_line = _line(frame, row)
     tk.Label(expiry_line, text="Expires: " + expiry_text, font=fonts["small"]).pack(side=tk.LEFT)
     row += 1
 
@@ -464,7 +474,9 @@ def _display_all_missions(frame: tk.Frame, missions: dict[int, mission_state.Mis
 
     # Soonest-to-expire first; missions with no expiry sort last.
     ordered = sorted(missions.values(), key=lambda m: (m.expiry == "", m.expiry))
-    for mission in ordered:
+    for i, mission in enumerate(ordered):
+        if i > 0:
+            row = _separator(frame, row, pady=_CARD_GAP)
         row = _display_all_missions_row(frame, mission, row)
     return row
 
@@ -493,17 +505,18 @@ def _display_all_missions_table(frame: tk.Frame, missions: list[mission_state.Mi
     for row, mission in enumerate(missions, start=1):
         name_text = f"{mission.name}  ⚠ Illegal" if mission.is_illegal else mission.name
         tk.Label(frame, text=name_text, justify=tk.LEFT).grid(
-            row=row, column=0, sticky=tk.W, padx=(0, 12))
+            row=row, column=0, sticky=tk.W, padx=(0, 12), pady=(0, 3))
         tk.Label(frame, text=mission.source_faction, justify=tk.LEFT).grid(
-            row=row, column=1, sticky=tk.W, padx=(0, 12))
+            row=row, column=1, sticky=tk.W, padx=(0, 12), pady=(0, 3))
 
         reward_text = _fmt_millions(mission.reward) if mission.reward else "-"
-        tk.Label(frame, text=reward_text).grid(row=row, column=2, sticky=tk.E, padx=(0, 12))
+        tk.Label(frame, text=reward_text).grid(
+            row=row, column=2, sticky=tk.E, padx=(0, 12), pady=(0, 3))
 
         expiry_text, urgent = _format_expiry(mission.expiry)
         if urgent:
             expiry_text = "⚠ " + expiry_text
-        tk.Label(frame, text=expiry_text).grid(row=row, column=3, sticky=tk.E)
+        tk.Label(frame, text=expiry_text).grid(row=row, column=3, sticky=tk.E, pady=(0, 3))
 
 
 class UI:
