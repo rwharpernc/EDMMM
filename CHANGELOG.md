@@ -3,6 +3,18 @@
 All notable changes to this project are documented here. Versions match
 `EDMMM/version` and the git tag each release is built from.
 
+## [0.5.0]
+
+- Settlement Raids (Ground) and Wing kill-stack rows now mark their kills
+  fraction with a `~` (e.g. `~3/17`) and add a page warning explaining that
+  the count is an estimate, not exact. Prompted by journal evidence from a
+  live session where a completed 17-kill on-foot massacre mission had only
+  3 matching `Bounty` events - most on-foot kills simply never produce a
+  `Bounty` event, so a low displayed count doesn't mean the mission isn't
+  nearly done. Previously only Wing missions were suspected of this;
+  turns out solo ground missions are affected too. See
+  TECHNICAL_SPEC.md's "Limitations for Wing/ground missions".
+
 ## [0.4.0]
 
 - The "no missions assigned at all" empty state now picks one of a handful

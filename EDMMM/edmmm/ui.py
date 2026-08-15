@@ -151,6 +151,11 @@ class FactionState:
     done: int = 0
     reward: int = 0
     shareable_reward: int = 0
+    is_estimate: bool = False
+    """True once any contributing mission is Wing or ground: for those, the
+    Bounty-event-based kill count is known to be unreliable (see
+    TECHNICAL_SPEC.md's "Limitations for Wing/ground missions") and should
+    be flagged rather than presented as an exact count."""
 
 
 class MassacreData:
@@ -179,6 +184,8 @@ class MassacreData:
             state.reward += mission.reward
             if mission.is_wing:
                 state.shareable_reward += mission.reward
+            if mission.is_wing or mission.is_ground:
+                state.is_estimate = True
 
             if mission.target_faction not in self.target_factions:
                 self.target_factions.append(mission.target_faction)
@@ -207,6 +214,10 @@ class MassacreData:
         if len(self.target_systems) > 1:
             self.warnings.append(
                 f"Multiple target systems: {', '.join(self.target_systems)}")
+        if any(state.is_estimate for state in self.faction_rows.values()):
+            self.warnings.append(
+                "~kills = estimate, not exact (Wing and/or on-foot kills often "
+                "go unreported until the mission completes)")
 
 
 class DisplaySettings:
@@ -425,7 +436,9 @@ def _display_row(frame: tk.Frame, faction: str, data: FactionState, mission_data
                   settings: DisplaySettings, row: int) -> int:
     """A faction's kill-stack as a 2-line card: faction name + kills fraction
     on top, progress bar + reward (+ delta) below."""
-    kills_text = f"{data.done}/{data.required}" if settings.progress else str(data.required)
+    estimate_marker = "~" if data.is_estimate else ""
+    kills_text = (f"{estimate_marker}{data.done}/{data.required}"
+                  if settings.progress else str(data.required))
 
     top = _line(frame, row, pady=(0, _LINE_PAD))
     tk.Label(top, text=faction, wraplength=_WRAP_NAME, justify=tk.LEFT, anchor=tk.W).pack(
@@ -453,7 +466,8 @@ def _display_sum(frame: tk.Frame, data: MassacreData, settings: DisplaySettings,
     row = _separator(frame, row, pady=2)
     fonts = _get_fonts()
     done_sum = sum(s.done for s in data.faction_rows.values())
-    kills_text = (f"{min(done_sum, data.stack_height)}/{data.stack_height}"
+    estimate_marker = "~" if any(s.is_estimate for s in data.faction_rows.values()) else ""
+    kills_text = (f"{estimate_marker}{min(done_sum, data.stack_height)}/{data.stack_height}"
                   if settings.progress else str(data.stack_height))
 
     top = _line(frame, row)

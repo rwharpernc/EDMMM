@@ -247,7 +247,7 @@ never confirms it directly. `MissionRedirected` is the one signal that
 isn't inferred: it comes straight from the game's own bookkeeping.
 Wherever the two disagree, redirected wins, unconditionally.
 
-### Limitations for Wing missions
+### Limitations for Wing/ground missions
 
 The estimation side of this algorithm (step 3 above) is built exclusively
 from **the current CMDR's own `Bounty` events.** That's a safe assumption
@@ -293,6 +293,23 @@ Concretely:
 This isn't a bug to fix so much as a hard ceiling imposed by what the
 journal exposes: wing-mission progress should be read as "at least this
 many, confirmed done the moment it flips."
+
+**The same ceiling applies to solo on-foot (`is_ground`) missions, and it's
+worse in practice.** Confirmed from a live journal on 2026-08-15: a solo,
+non-wing `Mission_OnFoot_Massacre_MB` requiring 17 kills was verified
+complete by the game (`MissionRedirected` then `MissionCompleted`), but
+only **3** `Bounty` events with a matching `VictimFaction` appeared in the
+entire session — the other ~14 kills produced no `Bounty` event, and no
+other journal event (`FactionKillBond` or otherwise) filled the gap either.
+A second concurrent solo ground mission requiring 10 kills had **zero**
+matching `Bounty` events the whole time it was active. Unlike ship combat,
+where a wanted kill reliably produces a `Bounty` voucher, most on-foot
+kills at a settlement apparently don't generate one at all — the mission's
+internal kill count is tracked server-side and isn't otherwise exposed
+until the mission redirects. `ui.py` marks any faction row containing a
+Wing or ground mission with a `~` prefix on the kills fraction (plus a page
+warning) for exactly this reason: the number is a floor, not a fact, for
+both cases.
 
 ## Pending/Complete status and drop-off location (Pages 3–7)
 

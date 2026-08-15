@@ -101,29 +101,6 @@ Massacre/Settlement Raids pages.
   on the Trade & Mining page, not Massacre) show their wing status, which
   today they don't.
 
-### Indicate when Massacre/Raid kill progress is an estimate (Wing missions)
-
-**Goal:** Make it visually clear on Pages 1–2 when a tracked mission's
-kill count is an inferred estimate rather than a confirmed number —
-mainly relevant to Wing missions, where wingmates' kills can never be
-observed from the local journal.
-
-**R&D notes:**
-- Root cause is documented in TECHNICAL_SPEC.md's "Limitations for Wing
-  missions": `massacre_state.compute_progress()` only sees the current
-  CMDR's own `Bounty` events, so a wing mission where wingmates do most of
-  the killing shows a low/stuck count that jumps straight to "done" only
-  once `MissionRedirected` fires - it never counts up one kill at a time
-  like a solo mission does.
-- `MassacreMission.is_wing` is already tracked and already reaches
-  `ui.py` (used for the reward-sharing column), so the row already
-  "knows" a mission is a wing mission - this would mostly be a display
-  change (e.g. a marker/tooltip on the kills column when `is_wing` is
-  true), not new event plumbing.
-- Scope should stay to a caveat marker, not a wing/solo breakdown - there
-  is no way to show "7 of 10, 2 yours" since wingmate kills never appear
-  in the journal at all, anonymized or otherwise.
-
 ### Show required mining method for mining missions
 
 **Goal:** Indicate which mining method (core / laser-surface /
