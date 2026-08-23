@@ -4,20 +4,19 @@ EDMC plugin that shows every active mission — with detailed kill-progress trac
 
 **Author:** R.W. Harper (CMDR Bocheaux) | **License:** GPLv3
 
-*Roughly 30% of this codebase was written with AI pair-programming assistance (Claude / Claude Code).*
-
 ## Contents
 
 - [Requirement](#requirement)
+- [What is EDMMM?](#what-is-edmmm)
+- [Installation](#installation)
+  - [Windows (Steam, Frontier launcher, or Epic)](#windows-steam-frontier-launcher-or-epic)
+  - [Linux (Steam / Proton)](#linux-steam--proton)
+- [Usage](#usage)
 - [Features](#features)
   - [Navigation](#navigation)
   - [Pages 1–2: Massacre (Space) \& Settlement Raids (Ground)](#pages-12-massacre-space--settlement-raids-ground)
   - [Pages 3–7: All Other Missions](#pages-37-all-other-missions)
   - [Header \& General](#header--general)
-- [Installation](#installation)
-  - [Windows (Steam, Frontier launcher, or Epic)](#windows-steam-frontier-launcher-or-epic)
-  - [Linux (Steam / Proton)](#linux-steam--proton)
-- [Usage](#usage)
 - [How kill progress is estimated (Massacre / Settlement Raids pages)](#how-kill-progress-is-estimated-massacre--settlement-raids-pages)
 - [Settings](#settings)
 - [Logging](#logging)
@@ -28,12 +27,66 @@ EDMC plugin that shows every active mission — with detailed kill-progress trac
 
 **[EDMarketConnector (EDMC)](https://github.com/EDCD/EDMarketConnector) must already be installed and running.** EDMMM is a plugin for EDMC, not a standalone application — it cannot function without it.
 
+## What is EDMMM?
+
 Tracks **every active mission**, with a dedicated view for **massacre
 missions in space and on the ground** (Odyssey settlement massacre and raid
 missions) that estimates kill progress in detail. Every commander's
 missions, kills, and progress are tracked separately, so it's
 **alt-friendly**: switch commanders in EDMC and the whole panel switches
 with you.
+
+## Installation
+
+Download the latest `EDMMM-vX.Y.Z.zip` from the
+[Releases page](https://github.com/rwharpernc/EDMMM/releases). In all cases:
+unzip it, copy the whole `EDMMM` folder into EDMC's plugins folder, delete
+any older copy of the plugin first if one exists, then restart EDMC.
+
+### Windows (Steam, Frontier launcher, or Epic)
+
+The journal location and EDMC's plugins folder are the same regardless of
+storefront:
+
+1. Open EDMC → File → Settings → Plugins tab → *Open* the plugins folder
+   (usually `%LOCALAPPDATA%\EDMarketConnector\plugins`).
+2. Copy the `EDMMM` folder there and restart EDMC.
+
+**These paths assume a default install.** If EDMC, Elite Dangerous, or your
+Steam library live somewhere custom, your actual paths will differ — prefer
+the **Open the plugins folder** button and EDMC's own journal-path setting
+over typing a path by hand.
+
+### Linux (Steam / Proton)
+
+Elite Dangerous has no native Linux client, so this assumes you're running
+it via Steam Play (Proton). EDMC likewise has no native Linux build — run it
+via its [Flatpak on Flathub](https://flathub.org/apps/io.edcd.EDMarketConnector)
+(easiest) or under Wine.
+
+1. If EDMC doesn't auto-detect your journal files, point it at
+   `~/.steam/steam/steamapps/compatdata/359320/pfx/drive_c/users/steamuser/Saved Games/Frontier Developments/Elite Dangerous`
+   via File → Settings → Configuration. This assumes the default Steam
+   library location — a Steam library on a different drive puts
+   `compatdata/359320` under that library's `steamapps` folder instead.
+2. Open EDMC → File → Settings → Plugins tab → *Open* the plugins folder.
+   Use that button rather than a hardcoded path — a Flatpak install keeps
+   plugins inside its sandboxed data directory
+   (`~/.var/app/io.edcd.EDMarketConnector/...`), not the
+   `~/.local/share/EDMarketConnector/plugins` a Wine/source install uses.
+3. Copy the `EDMMM` folder there and restart EDMC.
+
+The plugin's settings tab appears in File → Settings under "EDMMM".
+
+## Usage
+
+Start EDMC before (or with) the game. If you start EDMC while already in-game,
+go to the main menu and back so the game emits a fresh `Missions` event —
+the plugin needs it to know which missions are currently active.
+
+On startup the plugin reads the last two weeks of journal files to recover
+accepted missions, kills, and completed mission objectives, so state survives
+EDMC restarts.
 
 ## Features
 
@@ -133,58 +186,6 @@ Also:
 - Modern look: per-faction progress bars, section separators, and a
   stacked-card layout (rather than a wide table) so it stays readable in
   EDMC's narrow panel.
-
-## Installation
-
-Download the latest `EDMMM-vX.Y.Z.zip` from the
-[Releases page](https://github.com/rwharpernc/EDMMM/releases). In all cases:
-unzip it, copy the whole `EDMMM` folder into EDMC's plugins folder, delete
-any older copy of the plugin first if one exists, then restart EDMC.
-
-### Windows (Steam, Frontier launcher, or Epic)
-
-The journal location and EDMC's plugins folder are the same regardless of
-storefront:
-
-1. Open EDMC → File → Settings → Plugins tab → *Open* the plugins folder
-   (usually `%LOCALAPPDATA%\EDMarketConnector\plugins`).
-2. Copy the `EDMMM` folder there and restart EDMC.
-
-**These paths assume a default install.** If EDMC, Elite Dangerous, or your
-Steam library live somewhere custom, your actual paths will differ — prefer
-the **Open the plugins folder** button and EDMC's own journal-path setting
-over typing a path by hand.
-
-### Linux (Steam / Proton)
-
-Elite Dangerous has no native Linux client, so this assumes you're running
-it via Steam Play (Proton). EDMC likewise has no native Linux build — run it
-via its [Flatpak on Flathub](https://flathub.org/apps/io.edcd.EDMarketConnector)
-(easiest) or under Wine.
-
-1. If EDMC doesn't auto-detect your journal files, point it at
-   `~/.steam/steam/steamapps/compatdata/359320/pfx/drive_c/users/steamuser/Saved Games/Frontier Developments/Elite Dangerous`
-   via File → Settings → Configuration. This assumes the default Steam
-   library location — a Steam library on a different drive puts
-   `compatdata/359320` under that library's `steamapps` folder instead.
-2. Open EDMC → File → Settings → Plugins tab → *Open* the plugins folder.
-   Use that button rather than a hardcoded path — a Flatpak install keeps
-   plugins inside its sandboxed data directory
-   (`~/.var/app/io.edcd.EDMarketConnector/...`), not the
-   `~/.local/share/EDMarketConnector/plugins` a Wine/source install uses.
-3. Copy the `EDMMM` folder there and restart EDMC.
-
-The plugin's settings tab appears in File → Settings under "EDMMM".
-
-## Usage
-
-Start EDMC before (or with) the game. If you start EDMC while already in-game,
-go to the main menu and back so the game emits a fresh `Missions` event —
-the plugin needs it to know which missions are currently active.
-
-On startup the plugin reads the last two weeks of journal files to recover
-accepted missions, kills, and completed mission objectives, so state survives
-EDMC restarts.
 
 ## How kill progress is estimated (Massacre / Settlement Raids pages)
 
