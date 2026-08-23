@@ -5,7 +5,7 @@ EDMC plugin that shows every active mission — with detailed kill-progress trac
 [![Release](https://img.shields.io/github/v/release/rwharpernc/EDMMM?sort=semver)](https://github.com/rwharpernc/EDMMM/releases/latest)
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](LICENSE)
 
-**Author:** R.W. Harper (CMDR Mactavious) | **License:** GPLv3 (see [LICENSE](LICENSE))
+**Author:** R.W. Harper (CMDR Bocheaux) | **License:** GPLv3 (see [LICENSE](LICENSE))
 
 *Roughly 30% of this codebase was written with AI pair-programming assistance (Claude / Claude Code); the `.claude/` folder in this repo holds the project-level configuration used for that.*
 
@@ -13,15 +13,18 @@ EDMC plugin that shows every active mission — with detailed kill-progress trac
 
 - [Requirement](#requirement)
 - [What is EDMMM?](#what-is-edmmm)
+- [Installation](#installation)
+  - [Windows (Steam, Frontier Launcher, or Epic)](#windows-steam-frontier-launcher-or-epic)
+  - [Linux (Steam with Proton)](#linux-steam-with-proton)
+- [Usage](#usage)
 - [Features](#features)
   - [Navigation](#navigation)
   - [Pages 1–2: Massacre (Space) \& Settlement Raids (Ground)](#pages-12-massacre-space--settlement-raids-ground)
   - [Pages 3–7: All Other Missions](#pages-37-all-other-missions)
   - [Header \& General](#header--general)
   - [Settings](#settings)
-- [Installation](#installation)
-- [Usage](#usage)
 - [How kill progress is estimated](#how-kill-progress-is-estimated)
+- [For Developers](#for-developers)
 - [More info](#more-info)
 - [Acknowledgements](#acknowledgements)
 - [License](#license)
@@ -33,6 +36,47 @@ EDMC plugin that shows every active mission — with detailed kill-progress trac
 ## What is EDMMM?
 
 EDMMM displays **all your active missions in one place** — with a specialized view for massacre missions that tracks your kill progress in detail. Every commander's missions, kills, and progress are tracked separately, so it's **alt-friendly**: switch commanders in EDMC and the whole panel switches with you.
+
+## Installation
+
+1. **Download** the latest `EDMMM-vX.Y.Z.zip` from the [Releases page](https://github.com/rwharpernc/EDMMM/releases/latest).
+2. **Unzip it** to a temporary folder.
+3. **Copy the `EDMMM` folder** into your EDMC plugins folder (see platform instructions below).
+4. **Restart EDMC** — the plugin will start automatically.
+5. **Find the settings** in EDMC: File → Settings → **EDMMM** tab.
+
+### Windows (Steam, Frontier Launcher, or Epic)
+
+1. Open EDMC and go to: **File → Settings → Plugins tab → *Open* the plugins folder**.
+   - This opens your EDMC plugins folder directly (usually `%LOCALAPPDATA%\EDMarketConnector\plugins`).
+2. Paste the `EDMMM` folder there.
+3. Restart EDMC.
+
+**Note:** Installation is identical across all Windows storefronts — it doesn't matter if you own Elite Dangerous on Steam, Epic, or from Frontier.
+
+**All paths below assume a default install.** If you installed EDMC (or Elite Dangerous, or your Steam library) to a custom location, your actual paths will differ — always prefer the **Open the plugins folder** button and EDMC's own journal-path setting over typing a path by hand.
+
+### Linux (Steam with Proton)
+
+Elite Dangerous and EDMC don't have native Linux clients, but both run well through Steam/Wine.
+
+1. If EDMC doesn't auto-detect your journal files, tell it where they are:
+   - Under Proton, they're usually at: `~/.steam/steam/steamapps/compatdata/359320/pfx/drive_c/users/steamuser/Saved Games/Frontier Developments/Elite Dangerous`
+   - This assumes the default Steam library location — if Elite Dangerous is installed under a different Steam library (e.g. a second drive), `compatdata/359320` will be under that library's `steamapps` folder instead.
+   - In EDMC: **File → Settings → Configuration tab** — set the journal path there.
+
+2. Open EDMC: **File → Settings → Plugins tab → *Open* the plugins folder**.
+   - **Use the button**, not a hardcoded path — Flatpak and Wine keep plugin folders in different places, and the button always opens the right one.
+
+3. Paste the `EDMMM` folder there.
+
+4. Restart EDMC.
+
+## Usage
+
+1. **Start EDMC before or with the game** — the plugin reads your missions from EDMC's normal startup process.
+2. **If you start EDMC while in-game**: go to the main menu and back to the game. This tells the game to emit a fresh mission list so EDMMM can read it.
+3. **On first startup**, EDMMM reads the last two weeks of your journal files to recover missions and kills you completed before the plugin was installed. This takes a few seconds and happens automatically.
 
 ## Features
 
@@ -95,47 +139,6 @@ The plugin's options tab is in EDMC under **File → Settings → EDMMM**. It ha
 
 The tab also shows the installed plugin version and the location of its log file.
 
-## Installation
-
-1. **Download** the latest `EDMMM-vX.Y.Z.zip` from the [Releases page](https://github.com/rwharpernc/EDMMM/releases/latest).
-2. **Unzip it** to a temporary folder.
-3. **Copy the `EDMMM` folder** into your EDMC plugins folder (see platform instructions below).
-4. **Restart EDMC** — the plugin will start automatically.
-5. **Find the settings** in EDMC: File → Settings → **EDMMM** tab.
-
-### Windows (Steam, Frontier Launcher, or Epic)
-
-1. Open EDMC and go to: **File → Settings → Plugins tab → *Open* the plugins folder**.
-   - This opens your EDMC plugins folder directly (usually `%LOCALAPPDATA%\EDMarketConnector\plugins`).
-2. Paste the `EDMMM` folder there.
-3. Restart EDMC.
-
-**Note:** Installation is identical across all Windows storefronts — it doesn't matter if you own Elite Dangerous on Steam, Epic, or from Frontier.
-
-**All paths below assume a default install.** If you installed EDMC (or Elite Dangerous, or your Steam library) to a custom location, your actual paths will differ — always prefer the **Open the plugins folder** button and EDMC's own journal-path setting over typing a path by hand.
-
-### Linux (Steam with Proton)
-
-Elite Dangerous and EDMC don't have native Linux clients, but both run well through Steam/Wine.
-
-1. If EDMC doesn't auto-detect your journal files, tell it where they are:
-   - Under Proton, they're usually at: `~/.steam/steam/steamapps/compatdata/359320/pfx/drive_c/users/steamuser/Saved Games/Frontier Developments/Elite Dangerous`
-   - This assumes the default Steam library location — if Elite Dangerous is installed under a different Steam library (e.g. a second drive), `compatdata/359320` will be under that library's `steamapps` folder instead.
-   - In EDMC: **File → Settings → Configuration tab** — set the journal path there.
-
-2. Open EDMC: **File → Settings → Plugins tab → *Open* the plugins folder**.
-   - **Use the button**, not a hardcoded path — Flatpak and Wine keep plugin folders in different places, and the button always opens the right one.
-
-3. Paste the `EDMMM` folder there.
-
-4. Restart EDMC.
-
-## Usage
-
-1. **Start EDMC before or with the game** — the plugin reads your missions from EDMC's normal startup process.
-2. **If you start EDMC while in-game**: go to the main menu and back to the game. This tells the game to emit a fresh mission list so EDMMM can read it.
-3. **On first startup**, EDMMM reads the last two weeks of your journal files to recover missions and kills you completed before the plugin was installed. This takes a few seconds and happens automatically.
-
 ## How kill progress is estimated
 
 Massacre/ground raid pages show estimated kill counts because Elite Dangerous doesn't send explicit "kill complete" signals for stacked missions — only when a single mission finishes.
@@ -145,6 +148,25 @@ Massacre/ground raid pages show estimated kill counts because Elite Dangerous do
 - When you complete a mission, the game confirms it — EDMMM updates immediately.
 
 **The estimate may be off by 1–2 kills in edge cases** (anarchy settlements, or weird kill-credit situations), but mission completion always corrects it.
+
+## For Developers
+
+The instructions above are for players who just want to run the plugin. If you want to modify EDMMM, run it from source, or submit a pull request, you'll need a local dev setup instead of the zip from Releases.
+
+Quick start:
+
+```powershell
+# from the repo root
+python scripts/build.py
+
+# then drop dist/EDMMM into your EDMC plugins folder and restart EDMC
+```
+
+This reads `EDMMM/version`, copies the plugin into `dist/EDMMM/`, and also writes `dist/EDMMM-vX.Y.Z.zip` (the same artifact the release workflow publishes). `dist/` is gitignored, so regenerate it any time with the command above.
+
+There's no unit-test suite outside EDMC (`config`, `theme`, and `myNotebook` are EDMC-only modules that aren't installable standalone) — **always test changes against a running copy of EDMC before opening a PR.**
+
+For the full picture — code structure, mission-category detection, cutting a release, and CI — see [CONTRIBUTING.md](CONTRIBUTING.md). For the architecture and data flow under the hood, see [TECHNICAL_SPEC.md](TECHNICAL_SPEC.md).
 
 ## More info
 
@@ -168,5 +190,3 @@ GPL-3.0 — see [LICENSE](LICENSE).
 **Found a bug or have a suggestion?** Open an issue on [GitHub](https://github.com/rwharpernc/EDMMM/issues).
 
 **Want to contribute code?** See [CONTRIBUTING.md](CONTRIBUTING.md).
-
-**Curious how it works under the hood?** See [TECHNICAL_SPEC.md](TECHNICAL_SPEC.md) for the stack and architecture.

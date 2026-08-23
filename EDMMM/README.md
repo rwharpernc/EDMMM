@@ -2,7 +2,7 @@
 
 EDMC plugin that shows every active mission — with detailed kill-progress tracking for stacked massacre/settlement-raid missions.
 
-**Author:** R.W. Harper (CMDR Mactavious) | **License:** GPLv3
+**Author:** R.W. Harper (CMDR Bocheaux) | **License:** GPLv3
 
 *Roughly 30% of this codebase was written with AI pair-programming assistance (Claude / Claude Code).*
 
