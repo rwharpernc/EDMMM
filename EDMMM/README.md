@@ -233,9 +233,6 @@ It makes no web calls.
 
 ## Acknowledgements
 
-Inspired by [EDMC-Massacres](https://github.com/CMDR-WDX/EDMC-Massacres) by
-CMDR-WDX. Mission-category classification is based on the taxonomy in
-[EDDI](https://github.com/EDCD/EDDI)'s `MissionType.cs`. Built against
-[EDMarketConnector](https://github.com/EDCD/EDMarketConnector). Also
-referenced: [Inara](https://inara.cz/elite/), [Spansh](https://www.spansh.co.uk/),
-and [EDSM](https://www.edsm.net/).
+See [ATTRIBUTIONS.md](https://github.com/rwharpernc/EDMMM/blob/master/docs/ATTRIBUTIONS.md)
+for the other projects and community resources that inspired specific
+EDMMM features.

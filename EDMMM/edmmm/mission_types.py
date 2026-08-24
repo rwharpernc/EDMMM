@@ -4,8 +4,7 @@ Classifies missions into the categories the panel scrolls through.
 Elite Dangerous embeds mission type information in the internal `Name`
 field as underscore-separated tags (e.g. "Mission_Massacre_Onslaught",
 "Mission_Delivery_Illegal_MB"). This is undocumented by Frontier, but the
-tag vocabulary is well established in the community (this mirrors the
-EDDI project's MissionType.cs, the most complete public reference for it).
+tag vocabulary is well established in the community.
 """
 
 MASSACRE_SPACE = "massacre_space"

@@ -172,12 +172,7 @@ Full documentation (settings, logging, troubleshooting) is in [EDMMM/README.md](
 
 ## Acknowledgements
 
-EDMMM builds on ideas, data, and prior art from the Elite Dangerous community:
-
-- [EDMC-Massacres](https://github.com/CMDR-WDX/EDMC-Massacres) by CMDR-WDX — the original massacre tracker that inspired this project.
-- [EDDI](https://github.com/EDCD/EDDI) — its mission-type reference helped build EDMMM's category classifier.
-- [EDMarketConnector](https://github.com/EDCD/EDMarketConnector) (EDMC) — the host application this plugin runs in.
-- [Inara](https://inara.cz/elite/), [Spansh](https://www.spansh.co.uk/), and [EDSM](https://www.edsm.net/) — community data sources.
+See [docs/ATTRIBUTIONS.md](docs/ATTRIBUTIONS.md) for the other projects and community resources that inspired specific EDMMM features.
 
 ## License
 
