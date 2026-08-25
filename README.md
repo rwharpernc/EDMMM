@@ -109,7 +109,7 @@ These two pages track the *same* underlying mission type — one with a kill cou
 **Organized by type for quick scanning.**
 
 - **Combat** — assassinations, black ops, piracy and Thargoid-related missions, megaship disables, skimmer clearing, and other non-massacre combat missions.
-- **Trade & Mining** — delivery, courier, collection, mining, salvage, and colonisation/construction *supply missions* (accepted deliveries that happen to be colonisation-flavored). Colonisation *construction-depot progress* itself — the build as a whole, not any one delivery mission — has its own page; see below.
+- **Trade & Mining** — delivery, courier, collection, mining, salvage, and colonisation/construction *supply missions* (accepted deliveries that happen to be colonisation-flavored). Colonisation *construction-depot progress* itself — the build as a whole, not any one delivery mission — has its own page; see below. Mining missions get an extra **"Mine via: ..."** line naming which extraction method(s) — Core, Laser Surface, Sub-surface Deposit — the target commodity typically comes from (a best-effort community-sourced hint, not a mission field, so a handful of rare minerals list more than one method rather than guess).
 - **Passenger** — VIP, bulk, sightseeing, evacuation, and prisoner-transport missions.
 - **Covert / On-Foot Ops** — hacking, sabotage, heists, and other on-foot missions that aren't settlement raids.
 - **Other** — anything that doesn't fit the above (a handful of obscure or new mission types may land here until their naming pattern is recognized).

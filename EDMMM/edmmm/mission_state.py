@@ -31,6 +31,12 @@ class Mission:
     category: str
     """One of the mission_types.CATEGORY_ORDER keys."""
     is_illegal: bool
+    commodity: str
+    """Target commodity display name - only set for mining missions (see
+    mission_types.is_mining_mission), empty otherwise. Other Trade-category
+    missions (Collect, Delivery) also carry a Commodity field but don't
+    require mining it yourself, so it's deliberately left blank for those
+    rather than showing a misleading mining-method hint."""
 
 
 def __display_name(event: dict) -> str:
@@ -56,6 +62,8 @@ def __build_from_event(event: dict) -> Mission:
         accepted_at=event.get("timestamp", ""),
         category=mission_types.classify(event),
         is_illegal=mission_types.is_illegal(event),
+        commodity=event.get("Commodity_Localised", "")
+        if mission_types.is_mining_mission(event) else "",
     )
 
 

@@ -3,6 +3,21 @@
 All notable changes to this project are documented here. Versions match
 `EDMMM/version` and the git tag each release is built from.
 
+## [0.8.0]
+
+- Mining missions on the Trade & Mining page now show a **"Mine via: ..."**
+  line naming which extraction method(s) - Core, Laser Surface, Sub-surface
+  Deposit - the target commodity typically comes from, via a new static
+  lookup (`mining_methods.py`). The journal never states this itself (a
+  mission names its commodity, never the ring/method needed to get it), so
+  a handful of "premium" minerals that validly come from more than one
+  method (Painite, Void Opals, Alexandrite, ...) list every applicable one
+  rather than guess. Deliberately scoped to actual `Mission_Mining*`
+  missions only - confirmed from a live journal that Collect/Delivery
+  missions also carry a `Commodity` field (sometimes a genuinely mineable
+  one, like Pyrophyllite or Cryolite) despite requiring you to buy it, not
+  mine it, so those are correctly left without the hint.
+
 ## [0.7.0]
 
 - Massacre/Settlement Raids faction stacks (Pages 1–2) now show a

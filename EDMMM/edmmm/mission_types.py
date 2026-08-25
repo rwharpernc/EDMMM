@@ -74,6 +74,19 @@ def is_illegal(event: dict) -> bool:
     return any(hint in name for hint in _ILLEGAL_HINTS)
 
 
+def is_mining_mission(event: dict) -> bool:
+    """
+    True only for missions that require *mining* a commodity yourself
+    (Mission_Mining, Mission_Mining_Expansion, ...) - deliberately narrower
+    than "has a Commodity field", which Collect/Delivery missions also
+    carry (confirmed from a live journal: Mission_Collect_Industrial
+    commonly targets genuinely mineable commodities like Pyrophyllite or
+    Cryolite, but those are bought/collected, not mined). Showing a mining
+    hint on one of those would be actively wrong, not just unhelpful.
+    """
+    return "mining" in event.get("Name", "").lower()
+
+
 def classify(event: dict) -> str:
     """Bucket a MissionAccepted event into one of the panel's category pages."""
     if is_massacre_shaped(event):

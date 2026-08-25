@@ -227,6 +227,36 @@ mission either matches a hint substring or it doesn't. This is why
 lands in the wrong category — it's almost always a missing hint, not a
 logic bug.
 
+`mission_types.is_mining_mission()` is a narrower, separate check used
+only to gate the mining-method hint (see below) - it deliberately doesn't
+fire for every Trade-category mission that happens to carry a `Commodity`
+field, since Collect/Delivery missions carry one too (confirmed from a
+live journal: `Mission_Collect_Industrial` commonly targets a genuinely
+mineable commodity like Pyrophyllite or Cryolite, but those are bought and
+delivered, not mined) - only `Mission_Mining*` internal names qualify.
+
+## Mining method hint
+
+`mining_methods.py` is a second static lookup, separate from
+`mission_types.py`'s category hints: given a mining mission's target
+commodity (`Commodity_Localised`, captured on `mission_state.Mission` only
+when `mission_types.is_mining_mission()` is true), it returns which of the
+game's three extraction methods - Core, Laser Surface, Sub-surface Deposit
+- that commodity typically comes from. This can never be read from the
+journal itself: a `MissionAccepted` event names the commodity but not the
+ring or method needed to get it, because that's a property of wherever you
+choose to mine it, not of the mission.
+
+Most mineable commodities are Laser Surface only, so that's the table's
+default; only a short, well-established list of "premium" minerals (Void
+Opals, Painite, Alexandrite, ...) needs its own entry, because those
+validly come from more than one method depending on the specific
+ring/hotspot - the same "can't be resolved to one exact answer from
+journal data alone" situation the Wing/ground kill-progress estimate
+already lives with (see "Limitations for Wing/ground missions" above).
+Rather than guess, `ui.py` shows every applicable method for a
+multi-method commodity instead of picking one.
+
 ## Kill-progress estimation
 
 `massacre_state.compute_progress()` is the one genuinely non-trivial

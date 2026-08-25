@@ -38,6 +38,7 @@ from theme import theme
 import edmmm.colonisation_state as colonisation_state
 import edmmm.community_goal_state as community_goal_state
 import edmmm.game_mode as game_mode
+import edmmm.mining_methods as mining_methods
 import edmmm.mission_state as mission_state
 import edmmm.mission_types as mission_types
 import edmmm.settings
@@ -595,6 +596,13 @@ def _display_all_missions_row(frame: tk.Frame, mission: mission_state.Mission,
     tk.Label(faction_line, text=mission.source_faction, wraplength=_WRAP,
              justify=tk.LEFT, font=fonts["small"]).pack(side=tk.LEFT)
     row += 1
+
+    if mission.commodity:
+        methods_text = mining_methods.format_methods(mining_methods.methods_for(mission.commodity))
+        mining_line = _line(frame, row, pady=(0, _LINE_PAD))
+        tk.Label(mining_line, text=f"Mine via: {methods_text}", wraplength=_WRAP,
+                 justify=tk.LEFT, font=fonts["small"]).pack(side=tk.LEFT)
+        row += 1
 
     status_line = _line(frame, row, pady=(0, _LINE_PAD))
     tk.Label(status_line, text=status_text, font=fonts["small"]).pack(side=tk.LEFT)

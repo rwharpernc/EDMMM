@@ -149,7 +149,11 @@ in-game.
   happen to be colonisation-flavored). Colonisation *construction-depot
   progress* itself — the build as a whole, not any one delivery mission —
   has its own page; see [Pages 8–9](#pages-89-colonisation--community-goals)
-  below.
+  below. Mining missions get an extra **"Mine via: ..."** line naming
+  which extraction method(s) - Core, Laser Surface, Sub-surface Deposit -
+  the target commodity typically comes from (a best-effort
+  community-sourced hint, not a mission field, so a handful of rare
+  minerals list more than one method rather than guess).
 - **Passenger** — VIP, bulk, sightseeing, evacuation, and prisoner-transport
   missions.
 - **Covert / On-Foot Ops** — hacking, sabotage, heists, and other on-foot

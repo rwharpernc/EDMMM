@@ -72,23 +72,6 @@ Massacre/Settlement Raids pages.
   on the Trade & Mining page, not Massacre) show their wing status, which
   today they don't.
 
-### Show required mining method for mining missions
-
-**Goal:** Indicate which mining method (core / laser-surface /
-sub-surface deposit) a mining mission's target commodity requires.
-
-**R&D notes:**
-- Two real gaps found: (1) the mission's target commodity isn't captured
-  at all today - `mission_state.Mission` has no `Commodity` field, only
-  the human-readable mission name; (2) even once captured, the journal
-  doesn't say which mining method a commodity needs - that mapping is
-  external game knowledge, not journal data.
-- Would need a maintained static commodity-to-method lookup table
-  (similar upkeep burden to the `mission_types.py` hint lists).
-- Could only ever be a "typical method" approximation, since a given
-  commodity can sometimes come from more than one method depending on the
-  specific ring/hotspot.
-
 ## Open bugs
 
 - None at this time.

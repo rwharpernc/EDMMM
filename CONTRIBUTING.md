@@ -14,6 +14,9 @@ The plugin's runtime code lives in [`EDMMM/`](EDMMM):
   - `massacre_state.py` — massacre-specific filtering and kill tracking.
   - `kill_tracker.py` — tracks bounty/redirect evidence used to estimate massacre kill progress.
   - `mission_types.py` — classifies missions into categories (see below).
+  - `mining_methods.py` — static commodity-to-mining-method lookup for mining missions (see below).
+  - `colonisation_state.py` — tracks construction-depot progress and deliveries, per commander.
+  - `community_goal_state.py` — tracks Community Goal contribution and progress, per commander.
   - `game_mode.py` — tracks Solo/Open/Private Group status.
   - `ui.py` — renders the EDMC panel.
   - `settings.py` — plugin preferences and configuration.
@@ -41,6 +44,20 @@ Mission-category detection (`mission_types.py`) uses name-pattern matching again
 - PRs adding hints for mission types we don't recognize yet are especially welcome.
 
 Example: add the mission's internal name to the relevant category's `_..._HINTS` tuple in `mission_types.py` (e.g. `_COMBAT_HINTS`, `_TRADE_HINTS`).
+
+## Mining method lookup
+
+`mining_methods.py` maps a mining mission's target commodity to which
+extraction method(s) it typically comes from (Core / Laser Surface /
+Sub-surface Deposit) — the journal never says this itself, so it's a
+static, community-sourced table with the same upkeep burden as the
+mission-category hints above.
+
+**If a commodity is missing, or you know it can also come from a method
+not listed:** add or extend its entry in `_METHODS_BY_COMMODITY`. Anything
+not in that table defaults to Laser Surface, which is correct for the
+large majority of mineable commodities — only add an entry for a genuine
+exception.
 
 ## Building from source / getting a local test build
 
