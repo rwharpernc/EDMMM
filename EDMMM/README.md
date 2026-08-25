@@ -134,6 +134,10 @@ in-game.
   the current highest stack, so you know which to prioritize while hunting.
 - The Ground page also shows the target settlements.
 - Warns when a stack has multiple target factions or target systems.
+- A faction's stack is marked **⚠ Illegal** if any mission in it is
+  flagged illegal by the game - the same marker Pages 3–7 use, just
+  applied per-stack instead of per-mission since one row can bundle
+  several stacked missions.
 
 ### Pages 3–7: All Other Missions
 

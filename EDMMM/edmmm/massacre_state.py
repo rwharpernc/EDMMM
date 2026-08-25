@@ -25,6 +25,7 @@ class MassacreMission:
     reward: int
     is_wing: bool
     is_ground: bool
+    is_illegal: bool
     accepted_at: str
     """ISO timestamp of the MissionAccepted event (sortable as a string)"""
 
@@ -41,6 +42,7 @@ def __build_from_event(event: dict) -> MassacreMission:
         reward=event.get("Reward", 0),
         is_wing=event.get("Wing", False),
         is_ground=mission_types.is_ground_mission(event),
+        is_illegal=mission_types.is_illegal(event),
         accepted_at=event.get("timestamp", ""),
     )
 

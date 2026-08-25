@@ -20,21 +20,6 @@ a manual zip download.
   plugin that's currently loaded/running, and whether EDMC itself has any
   convention or API for this that other plugins already use.
 
-### Mark legal vs. illegal on the Massacre/Settlement Raids pages
-
-**Goal:** Show illegal-mission status on Pages 1–2, matching what Pages
-3–7 already do.
-
-**R&D notes:**
-- `is_illegal` currently only exists on the "All Missions" dataclass
-  (`mission_state.Mission`) and is only ever shown on the Pages 3–7 list
-  rows (`ui.py`) - `MassacreMission` has no such field, and the
-  per-faction stack rows show no illegal marking at all.
-- Those rows aggregate multiple missions per faction into one line, so a
-  stack could mix legal and illegal missions - this probably needs a
-  count/warning (like the existing multi-faction/multi-system warnings)
-  rather than a simple per-row flag.
-
 ### Clickable mission rows that open a details window
 
 **Goal:** Click a tracked mission to open a window with more detail on

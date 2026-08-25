@@ -3,6 +3,16 @@
 All notable changes to this project are documented here. Versions match
 `EDMMM/version` and the git tag each release is built from.
 
+## [0.7.0]
+
+- Massacre/Settlement Raids faction stacks (Pages 1–2) now show a
+  **⚠ Illegal** marker next to the faction name if any mission in that
+  stack is flagged illegal by the game - matching the marker Pages 3–7
+  already used, just applied per-stack instead of per-mission since one
+  row there can bundle several stacked missions from the same faction.
+  `MassacreMission` previously had no `is_illegal` field at all - only the
+  "All Missions" view tracked it.
+
 ## [0.6.0]
 
 - Added two new panel pages, neither of them missions: **Colonisation**

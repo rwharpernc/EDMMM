@@ -101,6 +101,7 @@ These two pages track the *same* underlying mission type — one with a kill cou
 - Per mission-giver faction: **required kills**, **estimated progress**, and **reward** (with the wing-shareable portion shown in brackets for missions accepted with a wing).
 - A **delta column** shows how many kills separate each faction's stack from the current highest stack, so you know which to prioritize while hunting.
 - The Ground page also lists the target settlements and warns you if multiple missions target different factions or star systems in the same stack (that's usually a problem).
+- A faction's stack is marked **⚠ Illegal** if any mission in it is flagged illegal by the game — the same marker Pages 3–7 use, just applied per-stack instead of per-mission since one row can bundle several stacked missions.
 - Kill progress is an estimate based on the bounties you've claimed — it updates live as you hunt.
 
 ### Pages 3–7: All Other Missions

@@ -180,6 +180,10 @@ class FactionState:
     Bounty-event-based kill count is known to be unreliable (see
     TECHNICAL_SPEC.md's "Limitations for Wing/ground missions") and should
     be flagged rather than presented as an exact count."""
+    has_illegal: bool = False
+    """True once any contributing mission is flagged illegal - a stack
+    groups every mission from one faction onto a single row, so this can
+    be true even when only one of several stacked missions is illegal."""
 
 
 class MassacreData:
@@ -210,6 +214,8 @@ class MassacreData:
                 state.shareable_reward += mission.reward
             if mission.is_wing or mission.is_ground:
                 state.is_estimate = True
+            if mission.is_illegal:
+                state.has_illegal = True
 
             if mission.target_faction not in self.target_factions:
                 self.target_factions.append(mission.target_faction)
@@ -485,9 +491,10 @@ def _display_row(frame: tk.Frame, faction: str, data: FactionState, mission_data
     estimate_marker = "~" if data.is_estimate else ""
     kills_text = (f"{estimate_marker}{data.done}/{data.required}"
                   if settings.progress else str(data.required))
+    name_text = f"{faction}  ⚠ Illegal" if data.has_illegal else faction
 
     top = _line(frame, row, pady=(0, _LINE_PAD))
-    tk.Label(top, text=faction, wraplength=_WRAP_NAME, justify=tk.LEFT, anchor=tk.W).pack(
+    tk.Label(top, text=name_text, wraplength=_WRAP_NAME, justify=tk.LEFT, anchor=tk.W).pack(
         side=tk.LEFT, fill=tk.X, expand=True)
     tk.Label(top, text=kills_text).pack(side=tk.RIGHT, anchor="ne")
     row += 1
