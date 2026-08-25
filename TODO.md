@@ -20,20 +20,6 @@ a manual zip download.
   plugin that's currently loaded/running, and whether EDMC itself has any
   convention or API for this that other plugins already use.
 
-### Track Community Goals and colonisation missions
-
-**Goal:** Show Community Goal contributions and colonisation missions on
-the panel like any other mission.
-
-**R&D notes:**
-- Neither is currently read. Community Goals fire a separate
-  `CommunityGoal` journal event (not a `MissionAccepted`) that the plugin
-  doesn't listen for at all.
-- Colonisation-construction-depot contributions may not go through the
-  mission system either.
-- Needs a real journal capture of each to confirm the actual event/field
-  names before implementing anything.
-
 ### Mark legal vs. illegal on the Massacre/Settlement Raids pages
 
 **Goal:** Show illegal-mission status on Pages 1–2, matching what Pages

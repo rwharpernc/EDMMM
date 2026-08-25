@@ -3,6 +3,21 @@
 All notable changes to this project are documented here. Versions match
 `EDMMM/version` and the git tag each release is built from.
 
+## [0.6.0]
+
+- Added two new panel pages, neither of them missions: **Colonisation**
+  (per-depot construction progress, still-needed commodities, and your own
+  delivered total, from the `ColonisationConstructionDepot`/
+  `ColonisationContribution` events) and **Community Goals** (your
+  contribution, community tier reached, credit reward, and a top-rank
+  badge, from the `CommunityGoal` event's `CurrentGoals` array). Both were
+  previously unreadable by the plugin entirely - confirmed from a live
+  journal capture that neither goes through `MissionAccepted` at all, so
+  each gets its own independent per-CMDR tracking module
+  (`colonisation_state.py`, `community_goal_state.py`) rather than folding
+  into the existing mission pipeline. See TECHNICAL_SPEC.md's "Data flow"
+  section.
+
 ## [0.5.0]
 
 - Settlement Raids (Ground) and Wing kill-stack rows now mark their kills

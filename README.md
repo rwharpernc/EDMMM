@@ -19,6 +19,7 @@ EDMC plugin that shows every active mission — with detailed kill-progress trac
   - [Navigation](#navigation)
   - [Pages 1–2: Massacre (Space) \& Settlement Raids (Ground)](#pages-12-massacre-space--settlement-raids-ground)
   - [Pages 3–7: All Other Missions](#pages-37-all-other-missions)
+  - [Pages 8–9: Colonisation \& Community Goals](#pages-89-colonisation--community-goals)
   - [Header \& General](#header--general)
   - [Settings](#settings)
 - [How kill progress is estimated](#how-kill-progress-is-estimated)
@@ -83,7 +84,7 @@ Several new features are currently under research and design — see
 
 ### Navigation
 
-- The plugin adds a panel to EDMC showing your missions across **7 category pages**. Use the ◂ / ▸ arrows to page between them — empty categories are automatically skipped.
+- The plugin adds a panel to EDMC showing your missions, plus colonisation and Community Goal progress, across **9 category pages**. Use the ◂ / ▸ arrows to page between them — empty categories are automatically skipped.
 - **All** — click the "All" link next to the page arrows to open a separate window listing every active mission across every category at once, in a wide table (not limited to EDMC's narrow panel width). It stays live while open.
 - **Only active missions are ever shown** — the moment you hand in, abandon, or fail a mission, it drops off the panel. Nothing lingers after it's no longer active.
 - If you have no missions assigned at all, the panel shows a message saying so instead of the page selector.
@@ -107,7 +108,7 @@ These two pages track the *same* underlying mission type — one with a kill cou
 **Organized by type for quick scanning.**
 
 - **Combat** — assassinations, black ops, piracy and Thargoid-related missions, megaship disables, skimmer clearing, and other non-massacre combat missions.
-- **Trade & Mining** — delivery, courier, collection, mining, salvage, and colonisation/construction supply runs. (Community Goals are **not** covered here or anywhere else — they aren't accepted missions in the game's own data model, so EDMMM has no way to see them.)
+- **Trade & Mining** — delivery, courier, collection, mining, salvage, and colonisation/construction *supply missions* (accepted deliveries that happen to be colonisation-flavored). Colonisation *construction-depot progress* itself — the build as a whole, not any one delivery mission — has its own page; see below.
 - **Passenger** — VIP, bulk, sightseeing, evacuation, and prisoner-transport missions.
 - **Covert / On-Foot Ops** — hacking, sabotage, heists, and other on-foot missions that aren't settlement raids.
 - **Other** — anything that doesn't fit the above (a handful of obscure or new mission types may land here until their naming pattern is recognized).
@@ -115,6 +116,13 @@ These two pages track the *same* underlying mission type — one with a kill cou
 Each mission shows: giver faction, status (**Pending** or **✓ Complete** — complete once the game confirms the objective is done and redirects you back to turn it in), the location to go to (the redirect's new turn-in location once complete, otherwise the original destination), reward, and time until expiry (soonest-expiring first). Missions the game flags as **illegal** are marked so you know which ones break laws.
 
 **Wing missions** (Wing Mining, Wing Trading, Wing Massacre, etc.) are tracked and categorized the same as any other mission, but the wing-shareable reward split is currently only displayed on the Massacre & Settlement Raids pages above — pages 3–7 show the full reward with no wing indicator.
+
+### Pages 8–9: Colonisation & Community Goals
+
+Neither of these is a mission — they aren't accepted, they never appear in a `MissionAccepted` event, and they don't count toward your 20-mission cap. Each still gets its own page because both are ongoing group efforts with a progress bar, the same shape as a mission stack even though the underlying game system is different.
+
+- **Colonisation** — one card per construction depot you've docked at recently: overall build progress, the commodities still most needed (capped to keep the card short, with a "+N more" summary), and your own delivered total. A depot that's finished shows **✓ Complete** instead of a needs list.
+- **Community Goals** — one card per CG the game has told you about that hasn't expired yet: your personal contribution, the community's tier reached (out of the top tier), your credit reward at that tier, a **🏆 Top rank** badge if you're in the leaderboard, and time left. A CG the game reports as already past its deadline drops off this page on its own — there's no dismiss button, since the game never sends an explicit "this CG is over" signal either.
 
 ### Header & General
 

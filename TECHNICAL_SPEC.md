@@ -57,8 +57,12 @@ functions by name; it's not EDMMM that decides when they run:
   for *every* journal event, live, for the rest of the session. This is the
   plugin's main nervous system: it dispatches `Missions`, `MissionAccepted`,
   `MissionAbandoned`/`MissionCompleted`/`MissionFailed`, `MissionRedirected`,
-  `Bounty`, and `LoadGame` to the relevant module. Everything else is
-  ignored.
+  `Bounty`, `ColonisationConstructionDepot`, `ColonisationContribution`,
+  `CommunityGoal`, and `LoadGame` to the relevant module. Everything else is
+  ignored. The `system`/`station` parameters (EDMC's own current-docked
+  values) are only consumed by the colonisation events - neither carries a
+  location of its own, but both only ever fire while docked at the depot in
+  question.
 - **`plugin_prefs(parent, cmdr, is_beta)` / `prefs_changed(cmdr, is_beta)`**
   — build the Settings tab and commit changes when the dialog closes.
 
@@ -117,6 +121,35 @@ does.
 **`game_mode.py`** is a third, independent per-CMDR store, fed only by
 `LoadGame` events, for the header's mode label.
 
+**`colonisation_state.py`** and **`community_goal_state.py`** are two more
+independent per-CMDR stores, backing the Colonisation and Community Goals
+pages. Neither is downstream of `mission_repository` at all - a
+construction depot and a Community Goal are never accepted, never carry a
+`MissionID`, and never go through `MissionAccepted`/`Missions` in any form.
+Both follow the same "only re-emit on an actual CMDR switch" pattern as
+`mission_repository.set_current_cmdr` (rather than kill_tracker's plain
+per-cmdr dicts read directly by `ui.py`), so a freshly-switched-to CMDR
+immediately sees whatever the journal backfill already found for them,
+without waiting for a live event of their own:
+
+- `colonisation_state.py` is keyed by `MarketID`, fed by
+  `ColonisationConstructionDepot` (a full snapshot of the depot's build
+  progress and per-commodity resource requirements each time it fires) and
+  `ColonisationContribution` (this CMDR's own delivered total, accumulated
+  separately from the depot-wide totals in the snapshot). Every depot ever
+  docked at is kept for the CMDR's whole session - there's no "this depot
+  is gone" event, only `ConstructionComplete`/`ConstructionFailed` flags on
+  the latest snapshot.
+- `community_goal_state.py` is keyed by `CGID`, fed by `CommunityGoal`'s
+  `CurrentGoals` array. That array isn't scoped to "the CG at your current
+  station" - a single event can list several CGs across different systems
+  at once, and an already-expired CG keeps reappearing for a while after
+  its own deadline (its evaluation/payout period, presumably) - confirmed
+  from a live journal. There's no "this CG is gone" event either, so every
+  CGID ever seen is kept indefinitely in the store; `ui.py` is what filters
+  the page down to "not yet expired" using the same `Expiry` field missions
+  use, reusing `_format_expiry`'s ISO parsing (`_is_expired` in `ui.py`).
+
 **`ui.py`** subscribes to all of the above and is the only module that
 touches Tkinter widgets directly. Every notification tears down and
 rebuilds the *entire* panel (`update_ui` destroys all children of the
@@ -154,6 +187,8 @@ flowchart LR
     LE --> MR
     LE --> KT["kill_tracker.py<br/>(bounties + redirects)"]
     LE --> GM["game_mode.py"]
+    LE --> CS["colonisation_state.py<br/>(depots, by MarketID)"]
+    LE --> CG["community_goal_state.py<br/>(goals, by CGID)"]
     MR --> MS["mission_state.py<br/>(All Missions view)"]
     MR --> MC["massacre_state.py<br/>(kill-stacking view)"]
     KT --> MC
@@ -161,6 +196,8 @@ flowchart LR
     MS --> UI
     MC --> UI
     GM --> UI
+    CS --> UI
+    CG --> UI
     CFG["settings.py /<br/>EDMC config store"] --> UI
 ```
 

@@ -16,6 +16,7 @@ EDMC plugin that shows every active mission — with detailed kill-progress trac
   - [Navigation](#navigation)
   - [Pages 1–2: Massacre (Space) \& Settlement Raids (Ground)](#pages-12-massacre-space--settlement-raids-ground)
   - [Pages 3–7: All Other Missions](#pages-37-all-other-missions)
+  - [Pages 8–9: Colonisation \& Community Goals](#pages-89-colonisation--community-goals)
   - [Header \& General](#header--general)
 - [How kill progress is estimated (Massacre / Settlement Raids pages)](#how-kill-progress-is-estimated-massacre--settlement-raids-pages)
 - [Settings](#settings)
@@ -96,7 +97,7 @@ what's being explored.
 
 ### Navigation
 
-- The panel is a set of **7 category pages** — click ◂ / ▸ to page between
+- The panel is a set of **9 category pages** — click ◂ / ▸ to page between
   them; empty categories are skipped automatically.
 - **All** — click the "All" link next to the page arrows to open a separate
   window listing every active mission across every category at once, in a
@@ -140,10 +141,11 @@ in-game.
   missions, megaship disables, skimmer clearing, and other non-massacre
   combat missions.
 - **Trade & Mining** — delivery, courier, collection, mining, salvage, and
-  colonisation/construction supply runs. Community Goals are **not**
-  covered here or anywhere else — they aren't accepted missions in the
-  game's own data model (no `MissionAccepted` event, no `MissionID`), so
-  EDMMM has no way to see them.
+  colonisation/construction *supply missions* (accepted deliveries that
+  happen to be colonisation-flavored). Colonisation *construction-depot
+  progress* itself — the build as a whole, not any one delivery mission —
+  has its own page; see [Pages 8–9](#pages-89-colonisation--community-goals)
+  below.
 - **Passenger** — VIP, bulk, sightseeing, evacuation, and prisoner-transport
   missions.
 - **Covert / On-Foot Ops** — hacking, sabotage, heists, and other on-foot
@@ -166,6 +168,27 @@ tracked and categorized the same as any other mission, but the
 wing-shareable reward split shown in brackets is currently only rendered
 on the Massacre & Settlement Raids pages above — pages 3–7 show the full
 reward with no wing indicator.
+
+### Pages 8–9: Colonisation & Community Goals
+
+Neither of these is a mission — they aren't accepted, never appear in a
+`MissionAccepted` event, and don't count toward your 20-mission cap. Each
+still gets its own page because both are ongoing group efforts with a
+progress bar, the same shape as a mission stack even though the
+underlying game system is different.
+
+- **Colonisation** — one card per construction depot you've docked at
+  recently: overall build progress, the commodities still most needed
+  (capped to keep the card short, with a "+N more" summary), and your own
+  delivered total. A finished depot shows **✓ Complete** instead of a
+  needs list.
+- **Community Goals** — one card per CG the game has told you about that
+  hasn't expired yet: your personal contribution, the community's tier
+  reached (out of the top tier), your credit reward at that tier, a
+  **🏆 Top rank** badge if you're in the leaderboard, and time left. A CG
+  the game reports as already past its deadline drops off this page on
+  its own — there's no dismiss button, since the game never sends an
+  explicit "this CG is over" signal either.
 
 ### Header & General
 
