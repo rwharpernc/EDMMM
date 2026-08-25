@@ -9,9 +9,11 @@ from typing import Callable
 # noinspection PyPep8Naming
 import myNotebook as nb
 from config import config
+from ttkHyperlinkLabel import HyperlinkLabel
 
 import edmmm.mission_types as mission_types
 from edmmm.logger_factory import LOG_FILE, logger
+from edmmm.update import RELEASES_PAGE_URL
 
 plugin_name = basename(Path(dirname(__file__)).parent)
 
@@ -75,6 +77,15 @@ class Configuration:
 
     #######################################
     @property
+    def auto_update(self):
+        return config.get_bool(f"{self.plugin_name}.auto_update", default=True)
+
+    @auto_update.setter
+    def auto_update(self, value: bool):
+        config.set(f"{self.plugin_name}.auto_update", value)
+
+    #######################################
+    @property
     def current_category(self) -> str:
         """Which category page is showing (a mission_types.CATEGORY_ORDER
         key). Set by the prev/next nav in the UI itself, not the settings
@@ -106,6 +117,8 @@ class Configuration:
             self.display_settlement = data["display_settlement"].get()
         if "display_game_mode" in keys:
             self.display_game_mode = data["display_game_mode"].get()
+        if "auto_update" in keys:
+            self.auto_update = data["auto_update"].get()
 
         for listener in self.config_changed_listeners:
             listener(self)
@@ -154,6 +167,7 @@ def __build_settings_ui(root) -> tk.Frame:
     __setting_changes["display_mission_count"] = tk.IntVar(value=configuration.display_mission_count)
     __setting_changes["display_settlement"] = tk.IntVar(value=configuration.display_settlement)
     __setting_changes["display_game_mode"] = tk.IntVar(value=configuration.display_game_mode)
+    __setting_changes["auto_update"] = tk.IntVar(value=configuration.auto_update)
 
     # Padding goes through .grid(), not the widget constructors: nb widgets
     # may be ttk-based depending on EDMC version, and ttk widgets reject
@@ -176,8 +190,15 @@ def __build_settings_ui(root) -> tk.Frame:
     for entry in ui_settings_checkboxes:
         entry.grid(columnspan=2, padx=checkbox_offset, sticky=tk.W)
 
-    nb.Label(frame, text=f"EDMMM v{__read_version()}").grid(
-        sticky=tk.W, padx=checkbox_offset, pady=10)
+    nb.Checkbutton(frame, text="Automatically download updates (applied on EDMC's next restart)",
+                   variable=__setting_changes["auto_update"]).grid(
+        columnspan=2, padx=checkbox_offset, pady=(6, 0), sticky=tk.W)
+
+    version_row = nb.Frame(frame)  # type: ignore
+    version_row.grid(sticky=tk.W, padx=checkbox_offset, pady=10)
+    nb.Label(version_row, text="EDMMM v").pack(side=tk.LEFT)
+    HyperlinkLabel(version_row, text=__read_version(), url=RELEASES_PAGE_URL,
+                   background=nb.Label().cget("background"), underline=True).pack(side=tk.LEFT)
     nb.Label(frame, text=f"Log file: {LOG_FILE}").grid(
         sticky=tk.W, padx=checkbox_offset)
 

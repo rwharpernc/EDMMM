@@ -18,6 +18,7 @@ EDMC plugin that shows every active mission — with detailed kill-progress trac
   - [Pages 3–7: All Other Missions](#pages-37-all-other-missions)
   - [Pages 8–9: Colonisation \& Community Goals](#pages-89-colonisation--community-goals)
   - [Header \& General](#header--general)
+- [Auto-update](#auto-update)
 - [How kill progress is estimated (Massacre / Settlement Raids pages)](#how-kill-progress-is-estimated-massacre--settlement-raids-pages)
 - [Settings](#settings)
 - [Logging](#logging)
@@ -212,11 +213,29 @@ The header shows:
 
 Also:
 
-- **Works offline** — see [File access](#file-access) below; no web calls.
+- **All mission/kill/colonisation/CG tracking is offline** — see
+  [File access](#file-access) below. The one exception is auto-update; see
+  next.
 - **Theme-aware** — the panel respects EDMC's light and dark themes.
 - Modern look: per-faction progress bars, section separators, and a
   stacked-card layout (rather than a wide table) so it stays readable in
   EDMC's narrow panel.
+
+## Auto-update
+
+Once per EDMC start, the plugin checks GitHub for a newer release and, if
+one exists, downloads and stages it automatically - nothing is sent in
+that request beyond the request itself (no telemetry, no journal data).
+Staged files only take effect the next time you restart EDMC; nothing is
+touched while EDMC is running.
+
+- The header shows a status line only while there's something to say:
+  "Downloading vX.Y.Z…", "Restart EDMC to update to vX.Y.Z" once staged,
+  or "Updated to vX.Y.Z" for a few seconds right after it takes effect -
+  silent the rest of the time.
+- **Turn it off** in Settings if you'd rather update manually via the
+  [Releases page](https://github.com/rwharpernc/EDMMM/releases/latest) -
+  the same page the header/Settings version link points to either way.
 
 ## How kill progress is estimated (Massacre / Settlement Raids pages)
 
@@ -244,9 +263,11 @@ has a checkbox for each of these, all on by default:
 - Mission count badge
 - Target settlement list (Ground page)
 - Game mode
+- Automatically download updates (see [Auto-update](#auto-update) above)
 
-The tab also shows the installed plugin version and the location of its
-log file (see [Logging](#logging) below).
+The tab also shows the installed plugin version - a clickable link to the
+Releases page - and the location of its log file (see
+[Logging](#logging) below).
 
 Which category page is showing is remembered across EDMC restarts — page
 through them with ◂ / ▸ on the panel itself, not the settings tab.
@@ -259,8 +280,11 @@ inspected without digging through EDMC's log directory.
 
 ## File access
 
-The plugin reads your Elite Dangerous journal files (last 2 weeks) on startup.
-It makes no web calls.
+The plugin reads your Elite Dangerous journal files (last 2 weeks) on
+startup. The only outbound web call it ever makes is the opt-out
+auto-update check described above (a GitHub Releases API request and,
+when a newer version exists, a zip download) - nothing else is sent
+anywhere, and mission/kill/colonisation/CG data never leaves your machine.
 
 ## Acknowledgements
 

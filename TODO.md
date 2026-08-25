@@ -9,17 +9,6 @@ from investigating the current code before any implementation starts.
 
 ## Planned
 
-### Auto-updating the plugin
-
-**Goal:** Check for and install new releases from within EDMC, rather than
-a manual zip download.
-
-**R&D notes:**
-- Not yet investigated in depth - open questions include how to check
-  GitHub Releases from inside EDMC, how to safely replace files for a
-  plugin that's currently loaded/running, and whether EDMC itself has any
-  convention or API for this that other plugins already use.
-
 ### Clickable mission rows that open a details window
 
 **Goal:** Click a tracked mission to open a window with more detail on

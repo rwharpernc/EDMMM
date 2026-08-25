@@ -18,6 +18,7 @@ The plugin's runtime code lives in [`EDMMM/`](EDMMM):
   - `colonisation_state.py` — tracks construction-depot progress and deliveries, per commander.
   - `community_goal_state.py` — tracks Community Goal contribution and progress, per commander.
   - `game_mode.py` — tracks Solo/Open/Private Group status.
+  - `update.py` — checks GitHub Releases and self-updates (see below).
   - `ui.py` — renders the EDMC panel.
   - `settings.py` — plugin preferences and configuration.
   - `logger_factory.py` — sets up the plugin's rotating log file.
@@ -34,6 +35,8 @@ python scripts/build.py
 
 # Drop dist/EDMMM into your EDMC plugins folder and restart EDMC
 ```
+
+**Auto-update will try to overwrite a local test install.** A copy dropped into your EDMC plugins folder for testing looks, to `update.py`, exactly like a real install - if it's older than whatever's currently the latest GitHub Release, EDMC will happily download and stage that release over your hand-edited files on its next restart. Either turn off "Automatically download updates" in the plugin's Settings tab for that install, or drop an empty `disable-auto-update.txt` file in the plugin folder (checked before the Settings checkbox, so it works even before the tab has loaded once).
 
 ## Mission category detection
 
@@ -59,6 +62,16 @@ not in that table defaults to Laser Surface, which is correct for the
 large majority of mineable commodities — only add an entry for a genuine
 exception.
 
+## Auto-update
+
+`update.py` always checks `https://api.github.com/repos/rwharpernc/EDMMM/releases/latest`
+- the constant isn't parameterized on the repo you're working in, so
+testing this feature end-to-end against a personal fork's releases means
+temporarily editing `RELEASES_API_URL`/`RELEASES_PAGE_URL` yourself; don't
+land that edit in a PR. See TECHNICAL_SPEC.md's "Auto-update" section for
+how staging, backups, and the Settings toggle fit together, and the
+"Testing changes" note above for the local-install gotcha.
+
 ## Building from source / getting a local test build
 
 ```powershell
@@ -81,6 +94,8 @@ Releases are cut from git tags:
 5. When publishing, mark alpha/beta releases as pre-releases so they don't show as the latest stable version.
 
 **Note:** The workflow fails the build if the tag and `EDMMM/version` don't match, so the two can't drift apart.
+
+**Once published, this is what auto-update pulls.** Any install with auto-update enabled (the default) downloads and stages this release automatically, applying it on that user's next EDMC restart - no separate publish step needed for that to reach them.
 
 ## CI/CD
 

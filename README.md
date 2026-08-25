@@ -21,6 +21,7 @@ EDMC plugin that shows every active mission — with detailed kill-progress trac
   - [Pages 3–7: All Other Missions](#pages-37-all-other-missions)
   - [Pages 8–9: Colonisation \& Community Goals](#pages-89-colonisation--community-goals)
   - [Header \& General](#header--general)
+  - [Auto-update](#auto-update)
   - [Settings](#settings)
 - [How kill progress is estimated](#how-kill-progress-is-estimated)
 - [For Developers](#for-developers)
@@ -129,9 +130,17 @@ Neither of these is a mission — they aren't accepted, they never appear in a `
 
 - **Header shows total mission count** (x/20 — the game's limit) and current game mode (Solo / Open / Private Group with group name / CQC).
 - **Per-commander profiles** — each commander's missions, kills, and progress are tracked separately; switching commanders switches the entire view. This is what makes EDMMM alt-friendly.
-- **Works offline** — the plugin only reads your local journal files. No web calls, no external dependencies.
+- **All mission/kill/colonisation/Community Goal tracking is offline** — that data only ever comes from your local journal files and nothing about it is sent anywhere. The one exception is auto-update, an opt-out check against GitHub Releases; see below.
 - **Theme-aware** — the panel respects EDMC's light and dark themes, so it's readable no matter which one you use.
 - **Its own rotating log file**, separate from EDMC's, so plugin issues can be diagnosed without digging through EDMC's log.
+
+### Auto-update
+
+Once per EDMC start, the plugin checks GitHub for a newer release and, if one exists, downloads and stages it automatically — nothing is sent in that request beyond the request itself (no telemetry, no journal data). The staged files only take effect the next time you restart EDMC.
+
+- The header shows a status line only while there's something to say: "Downloading vX.Y.Z…", "Restart EDMC to update to vX.Y.Z" once staged, or "Updated to vX.Y.Z" for a few seconds right after it takes effect. It's silent the rest of the time.
+- **Turn it off** in Settings (below) if you'd rather update manually via the [Releases page](https://github.com/rwharpernc/EDMMM/releases/latest) — the same page the header/Settings version link points to either way.
+- Nothing is overwritten while EDMC is running; a staged update just waits for the next restart.
 
 ### Settings
 
@@ -143,8 +152,9 @@ The plugin's options tab is in EDMC under **File → Settings → EDMMM**. It ha
 - Mission count badge
 - Target settlement list (Ground page)
 - Game mode
+- Automatically download updates (see [Auto-update](#auto-update) above)
 
-The tab also shows the installed plugin version and the location of its log file.
+The tab also shows the installed plugin version — a clickable link to the Releases page — and the location of its log file.
 
 ## How kill progress is estimated
 

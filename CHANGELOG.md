@@ -3,6 +3,22 @@
 All notable changes to this project are documented here. Versions match
 `EDMMM/version` and the git tag each release is built from.
 
+## [0.9.0]
+
+- Added auto-update: once per EDMC start, the plugin checks GitHub
+  Releases and, if a newer one exists, downloads and stages it over the
+  current install (`update.py`), taking effect on EDMC's next restart. The
+  header shows a status line only while there's something to say
+  (downloading / staged, restart to apply / just applied), and a Settings
+  checkbox (on by default) turns it off, alongside a `disable-auto-update.txt`
+  dev handbrake for a hand-edited local copy. Uses stdlib `urllib`/`zipfile`
+  only, not the `requests` package EDMC itself bundles, keeping "no
+  third-party pip dependencies" true even though this is the plugin's one
+  exception to making no network calls at all - the README/EDMMM/README.md
+  offline claims have been reworded to reflect that honestly rather than
+  keep an inaccurate blanket "no web calls" statement. Modeled on EDPPMT's
+  existing self-update mechanism.
+
 ## [0.8.0]
 
 - Mining missions on the Trade & Mining page now show a **"Mine via: ..."**

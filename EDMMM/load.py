@@ -17,22 +17,28 @@ if _plugin_dir not in sys.path:
 import datetime as dt
 import tkinter
 from os.path import basename, dirname
-from typing import Any
+from typing import Any, Optional
 
 import edmmm.colonisation_state as colonisation_state
 import edmmm.community_goal_state as community_goal_state
 import edmmm.game_mode as game_mode
 import edmmm.kill_tracker as kill_tracker
 import edmmm.mission_repository as mission_repository_module
+import edmmm.update as update
 from edmmm.journal_scan import scan_journals
 from edmmm.logger_factory import logger
-from edmmm.settings import build_settings_ui, push_new_changes
+from edmmm.settings import build_settings_ui, configuration, push_new_changes
 from edmmm.ui import ui
 
 plugin_name = os.path.basename(os.path.dirname(__file__))
 
+_updater: Optional[update.UpdateManager] = None
+"""Kept alive purely so the background check thread's bound method holds a
+live reference for its lifetime - not read again after plugin_start3."""
 
-def plugin_start3(_plugin_dir: str) -> str:
+
+def plugin_start3(plugin_dir: str) -> str:
+    global _updater
     logger.info("Starting EDMMM Plugin")
 
     # Read the last two weeks of journals so mission state survives restarts.
@@ -61,7 +67,29 @@ def plugin_start3(_plugin_dir: str) -> str:
         community_goal_state.initialize({})
 
     logger.info("Awaiting Missions-Event to build the active mission list")
+
+    applied_version = update.check_applied_update()
+    if applied_version is not None:
+        logger.info(f"EDMMM updated to v{applied_version}")
+        ui.set_update_applied(applied_version)
+
+    _updater = update.UpdateManager(plugin_dir, on_ready=_on_update_ready,
+                                    on_downloading=_on_update_downloading)
+    _updater.check_async(configuration.auto_update)
+
     return basename(dirname(__file__))
+
+
+def _on_update_downloading(version: str) -> None:
+    # Called from the update-check background thread - marshal onto the Tk
+    # main thread before touching any widgets.
+    ui.run_on_main_thread(lambda: ui.set_update_downloading(version))
+
+
+def _on_update_ready(version: str) -> None:
+    # Called from the update-check background thread - marshal onto the Tk
+    # main thread before touching any widgets.
+    ui.run_on_main_thread(lambda: ui.set_update_downloaded(version))
 
 
 def plugin_app(parent: tkinter.Frame) -> tkinter.Frame:

@@ -34,6 +34,7 @@ from dataclasses import dataclass, field
 from typing import Optional
 
 from theme import theme
+from ttkHyperlinkLabel import HyperlinkLabel
 
 import edmmm.colonisation_state as colonisation_state
 import edmmm.community_goal_state as community_goal_state
@@ -42,6 +43,7 @@ import edmmm.mining_methods as mining_methods
 import edmmm.mission_state as mission_state
 import edmmm.mission_types as mission_types
 import edmmm.settings
+import edmmm.update as update
 from edmmm import kill_tracker
 from edmmm.colonisation_state import ColonisationDepot
 from edmmm.community_goal_state import CommunityGoal
@@ -111,6 +113,15 @@ __on_canvas_resize), so right-anchored values (reward, kills, status) get a
 sliver of breathing room from the scrollbar too, not just wrapped text."""
 _URGENT_EXPIRY_MINUTES = 120
 """Below this many minutes left, a mission's expiry is shown as a warning."""
+
+_UPDATE_STATUS_COLORS = {"downloading": ACCENT, "updated": OK}
+""""downloaded" (restart needed) deliberately has no entry - it uses the
+same "⚠ " convention as urgent expiries/illegal markers elsewhere on the
+panel instead of a dedicated color, so it falls back to the theme's plain
+text color like everything else that isn't a permanent color exception."""
+_UPDATED_MESSAGE_DURATION_MS = 15_000
+"""How long "Updated to vX" stays up before reverting to nothing, so a
+one-time confirmation doesn't linger until the next actual update."""
 
 _NO_MISSIONS_MESSAGES = (
     "No missions. Go get some!",
@@ -410,18 +421,45 @@ def _progress_bar(frame: tk.Frame, done: int, required: int) -> tk.Canvas:
     return canvas
 
 
-def _display_no_data_info(frame: tk.Frame, cmdr: Optional[str]) -> int:
+def _display_no_data_info(frame: tk.Frame, cmdr: Optional[str], row: int) -> int:
     who = f"CMDR {cmdr}" if cmdr else "this commander"
     label = tk.Label(frame, justify=tk.LEFT, wraplength=_WRAP,
                      text=f"No active mission data for {who} yet.\n"
                           "Relog (main menu and back) to sync missions.")
-    label.grid(column=0, row=0, sticky=tk.W)
-    return 1
+    label.grid(column=0, row=row, sticky=tk.W)
+    return row + 1
 
 
 def _display_no_missions(frame: tk.Frame, row: int, text: str) -> int:
     label = tk.Label(frame, text=text)
     label.grid(column=0, row=row, sticky=tk.W, pady=(2, 0))
+    return row + 1
+
+
+def _update_status_text(kind: str, version: str) -> str:
+    if kind == "downloading":
+        return f"Downloading EDMMM v{version}…"
+    if kind == "downloaded":
+        return f"⚠ Restart EDMC to update to v{version}"
+    if kind == "updated":
+        return f"Updated to v{version}"
+    return ""
+
+
+def _display_update_status(frame: tk.Frame, state: tuple[str, Optional[str]], row: int) -> int:
+    """A one-line, clickable auto-update status - shown only while there's
+    something to say (downloading/downloaded/updated); silent the rest of
+    the time so it doesn't add permanent chrome to an otherwise unchanged
+    header. Rendered unconditionally ahead of the "no active mission data
+    yet" gate below, since update status is independent of mission data."""
+    kind, version = state
+    if kind == "normal" or version is None:
+        return row
+    line = _line(frame, row, pady=(0, _LINE_PAD))
+    color = _UPDATE_STATUS_COLORS.get(kind)
+    kwargs = {"foreground": color} if color else {}
+    HyperlinkLabel(line, text=_update_status_text(kind, version), url=update.RELEASES_PAGE_URL,
+                  font=_get_fonts()["small"], underline=True, **kwargs).pack(side=tk.LEFT, anchor=tk.W)
     return row + 1
 
 
@@ -831,6 +869,8 @@ class UI:
         self.__scrollbar: Optional[tk.Scrollbar] = None
         self.__popup: Optional[tk.Toplevel] = None
         self.__popup_content: Optional[tk.Frame] = None
+        self.__version_state: tuple[str, Optional[str]] = ("normal", None)
+        self.__version_clear_scheduled = False
         self.__settings = DisplaySettings(edmmm.settings.configuration)
         self.__current_category = edmmm.settings.configuration.current_category
         if self.__current_category not in _PAGE_ORDER:
@@ -1012,6 +1052,33 @@ class UI:
         self.__community_goals = data
         self.update_ui()
 
+    def run_on_main_thread(self, callback) -> None:
+        """update.py's UpdateManager calls its on_downloading/on_ready
+        callbacks from a background thread (network I/O) - this is the one
+        place a non-Tkinter module needs to touch the panel, so it goes
+        through the frame's own event loop via after(0, ...) rather than
+        calling a set_update_* method directly from that thread."""
+        if self.__frame is not None and self.__frame.winfo_exists():
+            self.__frame.after(0, callback)
+
+    def set_update_downloading(self, version: str) -> None:
+        self.__version_state = ("downloading", version)
+        self.update_ui()
+
+    def set_update_downloaded(self, version: str) -> None:
+        self.__version_state = ("downloaded", version)
+        self.update_ui()
+
+    def set_update_applied(self, version: str) -> None:
+        self.__version_state = ("updated", version)
+        self.update_ui()
+
+    def __clear_update_state_if_stale(self) -> None:
+        self.__version_clear_scheduled = False
+        if self.__version_state[0] == "updated":
+            self.__version_state = ("normal", None)
+            self.__refresh_if_alive()
+
     def __render_current_page(self, frame: tk.Frame, row: int) -> int:
         category = self.__current_category
 
@@ -1051,13 +1118,18 @@ class UI:
         for child in self.__content.winfo_children():
             child.destroy()
 
+        row = _display_update_status(self.__content, self.__version_state, 0)
+        if self.__version_state[0] == "updated" and not self.__version_clear_scheduled:
+            self.__version_clear_scheduled = True
+            self.__frame.after(_UPDATED_MESSAGE_DURATION_MS, self.__clear_update_state_if_stale)
+
         if self.__all_missions_data is None:
-            _display_no_data_info(self.__content, kill_tracker.current_cmdr)
+            _display_no_data_info(self.__content, kill_tracker.current_cmdr, row)
         else:
             counts = self.__category_counts()
             total = len(self.__all_missions_data)
             row = _display_cmdr_header(self.__content, kill_tracker.current_cmdr,
-                                        total, self.__settings, 0)
+                                        total, self.__settings, row)
             if sum(counts.values()) == 0:
                 _display_no_missions(self.__content, row, random.choice(_NO_MISSIONS_MESSAGES))
             else:

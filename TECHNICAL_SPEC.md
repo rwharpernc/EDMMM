@@ -14,6 +14,7 @@ contributing, not at end users — see [README.md](README.md) for that.
 - [Kill-progress estimation](#kill-progress-estimation)
 - [Config \& persistence](#config--persistence)
 - [Build \& release](#build--release)
+- [Auto-update](#auto-update)
 - [Notable constraints](#notable-constraints)
 
 ## Stack
@@ -35,8 +36,13 @@ contributing, not at end users — see [README.md](README.md) for that.
   `theme` module (light/dark theme state), and the plugin lifecycle contract
   described below. EDMMM cannot run outside EDMC — it's a plugin, not an
   application.
-- **No network calls, ever.** All data comes from local journal files (see
-  [Data flow](#data-flow)); nothing is sent anywhere.
+- **Mission/kill/colonisation/CG data never leaves the machine.** All of
+  that comes from local journal files (see [Data flow](#data-flow)) and
+  nothing about it is ever sent anywhere. The one exception to "no network
+  calls" at all is auto-update (`update.py`): a GitHub Releases API call
+  plus a zip download, opt-out in Settings, sending nothing but the plain
+  HTTP request itself (no telemetry, no journal data, no identifying
+  payload) - see "Auto-update" below.
 - **Build tooling:** `scripts/build.py` (stdlib `shutil`/`zipfile` only).
   CI/release run on GitHub Actions.
 
@@ -50,7 +56,9 @@ functions by name; it's not EDMMM that decides when they run:
   (`journal_scan.scan_journals`) and seeds `mission_repository`,
   `kill_tracker`, and `game_mode` with the result. Wrapped in a broad
   `try/except`: a scan failure logs and starts from empty state rather than
-  blocking the plugin (and its settings tab) from loading at all.
+  blocking the plugin (and its settings tab) from loading at all. Also
+  where `update.check_applied_update()` runs and `update.UpdateManager`'s
+  background check is kicked off - see "Auto-update" below.
 - **`plugin_app(parent) -> Frame`** — called once to get the widget EDMC
   embeds in its main window. Delegates straight to `ui.UI.set_frame`.
 - **`journal_entry(cmdr, is_beta, system, station, entry, state)`** — called
@@ -428,6 +436,64 @@ and only if the tag matches `EDMMM/version` exactly — so a release can
 never publish a build whose in-app version label disagrees with its
 download filename. See [CONTRIBUTING.md](CONTRIBUTING.md) for the full
 release checklist.
+
+## Auto-update
+
+`update.py` is the plugin's one deliberate exception to "no network
+calls": once per EDMC run, `UpdateManager.check_async()` spawns a daemon
+thread (network I/O must never block EDMC's startup) that GETs
+`RELEASES_API_URL` (`GET /repos/rwharpernc/EDMMM/releases/latest`), compares
+its `tag_name` against `EDMMM/version`, and - if newer, not a draft, and
+not a prerelease - downloads the release zip's asset into
+`<plugin_dir>/updates/` and stages it directly over the running install.
+Staging never reloads code; it only takes effect the next time EDMC
+restarts and re-imports the plugin fresh. Uses stdlib `urllib`/`zipfile`
+only, not the `requests` package EDMC itself bundles (unlike EDPPMT's
+equivalent), to keep the "no third-party pip dependencies" property in
+the Stack section above true even though the plugin isn't fully offline
+anymore.
+
+- **Enable/disable:** `edmmm.settings.configuration.auto_update` (a
+  regular Settings-tab checkbox, on by default) is read once by
+  `load.py.plugin_start3()` and passed into `check_async()` - `update.py`
+  deliberately never imports `edmmm.settings` itself, to avoid a
+  settings.py/update.py import cycle (settings.py needs `update.py`'s
+  `RELEASES_PAGE_URL` for its version hyperlink). A `disable-auto-update.txt`
+  sentinel file dropped in the plugin folder overrides the checkbox
+  unconditionally - the dev handbrake for a copy you're actively
+  hand-editing.
+- **Staging, not replacing:** `_apply()` extracts the downloaded zip over
+  `plugin_dir` file-by-file (stripping the zip's top-level `EDMMM/` folder,
+  since `plugin_dir` already *is* that folder), so only files the new
+  release actually ships get touched. `logs/`, `updates/`, `backups/`, and
+  `__pycache__` are never part of a release zip (see `scripts/build.py`'s
+  `EXCLUDE_DIR_NAMES`), so they're never touched by this either - the
+  plugin's own log history and update bookkeeping survive every applied
+  update untouched.
+- **Backup before applying:** `_backup_current()` zips the entire current
+  install (again excluding the same never-shipped folders) into
+  `<plugin_dir>/backups/<timestamp>.zip` before `_apply()` runs, keeping
+  the `BACKUPS_KEEP` (3) most recent; there's no restore UI yet, but the
+  files are there for a manual rollback.
+- **Applied-update detection:** `check_applied_update()` (called at the
+  very top of every `plugin_start3()`) compares the running version
+  against `EDMMM.last_version` recorded in EDMC's config store on the
+  *previous* run. A mismatch means a staged update just took effect on
+  this restart, which is the one-time "Updated to vX" confirmation
+  `ui.py` shows on the main panel (auto-clears after 15s - see
+  `_UPDATED_MESSAGE_DURATION_MS`).
+- **Main-panel status line is otherwise silent.** Unlike EDPPMT (which
+  always shows a version label), EDMMM's header only grows an extra line
+  while there's actually something to say - downloading, staged-and-
+  awaiting-restart, or just-applied - matching the rest of the panel's
+  "only show a warning when there's something to warn about" style (the
+  Settings tab's version label is always visible, and always links to
+  `RELEASES_PAGE_URL`, whether or not an update is pending).
+- **Thread-to-UI marshaling:** `UpdateManager`'s background thread never
+  touches Tkinter directly - its `on_downloading`/`on_ready` callbacks
+  (wired up in `load.py`) go through `ui.run_on_main_thread()`, which
+  hands a plain callback to the frame's own `after(0, ...)`, the same
+  pattern EDPPMT already uses successfully for this exact problem.
 
 ## Notable constraints
 
