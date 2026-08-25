@@ -114,11 +114,6 @@ sliver of breathing room from the scrollbar too, not just wrapped text."""
 _URGENT_EXPIRY_MINUTES = 120
 """Below this many minutes left, a mission's expiry is shown as a warning."""
 
-_UPDATE_STATUS_COLORS = {"downloading": ACCENT, "updated": OK}
-""""downloaded" (restart needed) deliberately has no entry - it uses the
-same "⚠ " convention as urgent expiries/illegal markers elsewhere on the
-panel instead of a dedicated color, so it falls back to the theme's plain
-text color like everything else that isn't a permanent color exception."""
 _UPDATED_MESSAGE_DURATION_MS = 15_000
 """How long "Updated to vX" stays up before reverting to nothing, so a
 one-time confirmation doesn't linger until the next actual update."""
@@ -436,30 +431,22 @@ def _display_no_missions(frame: tk.Frame, row: int, text: str) -> int:
     return row + 1
 
 
-def _update_status_text(kind: str, version: str) -> str:
-    if kind == "downloading":
-        return f"Downloading EDMMM v{version}…"
-    if kind == "downloaded":
-        return f"⚠ Restart EDMC to update to v{version}"
-    if kind == "updated":
-        return f"Updated to v{version}"
-    return ""
-
-
 def _display_update_status(frame: tk.Frame, state: tuple[str, Optional[str]], row: int) -> int:
-    """A one-line, clickable auto-update status - shown only while there's
-    something to say (downloading/downloaded/updated); silent the rest of
-    the time so it doesn't add permanent chrome to an otherwise unchanged
-    header. Rendered unconditionally ahead of the "no active mission data
-    yet" gate below, since update status is independent of mission data."""
+    """A one-line, clickable "Updated to vX" confirmation - shown only right
+    after a staged update takes effect (auto-clears after
+    _UPDATED_MESSAGE_DURATION_MS), silent the rest of the time. The plugin
+    version itself lives only in the Settings tab; downloading/staged
+    states are tracked (see update.py, ui.set_update_downloading/
+    set_update_downloaded) but deliberately not surfaced here. Rendered
+    unconditionally ahead of the "no active mission data yet" gate below,
+    since update status is independent of mission data."""
     kind, version = state
-    if kind == "normal" or version is None:
+    if kind != "updated" or version is None:
         return row
     line = _line(frame, row, pady=(0, _LINE_PAD))
-    color = _UPDATE_STATUS_COLORS.get(kind)
-    kwargs = {"foreground": color} if color else {}
-    HyperlinkLabel(line, text=_update_status_text(kind, version), url=update.RELEASES_PAGE_URL,
-                  font=_get_fonts()["small"], underline=True, **kwargs).pack(side=tk.LEFT, anchor=tk.W)
+    HyperlinkLabel(line, text=f"Updated to v{version}", url=update.RELEASES_PAGE_URL,
+                  font=_get_fonts()["small"], underline=True, foreground=OK).pack(
+        side=tk.LEFT, anchor=tk.W)
     return row + 1
 
 
@@ -1062,10 +1049,12 @@ class UI:
             self.__frame.after(0, callback)
 
     def set_update_downloading(self, version: str) -> None:
+        # Tracked but not currently rendered - see _display_update_status.
         self.__version_state = ("downloading", version)
         self.update_ui()
 
     def set_update_downloaded(self, version: str) -> None:
+        # Tracked but not currently rendered - see _display_update_status.
         self.__version_state = ("downloaded", version)
         self.update_ui()
 

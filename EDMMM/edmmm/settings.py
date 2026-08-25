@@ -78,7 +78,7 @@ class Configuration:
     #######################################
     @property
     def auto_update(self):
-        return config.get_bool(f"{self.plugin_name}.auto_update", default=True)
+        return config.get_bool(f"{self.plugin_name}.auto_update", default=False)
 
     @auto_update.setter
     def auto_update(self, value: bool):

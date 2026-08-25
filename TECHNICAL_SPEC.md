@@ -40,9 +40,9 @@ contributing, not at end users — see [README.md](README.md) for that.
   that comes from local journal files (see [Data flow](#data-flow)) and
   nothing about it is ever sent anywhere. The one exception to "no network
   calls" at all is auto-update (`update.py`): a GitHub Releases API call
-  plus a zip download, opt-out in Settings, sending nothing but the plain
-  HTTP request itself (no telemetry, no journal data, no identifying
-  payload) - see "Auto-update" below.
+  plus a zip download, opt-in and off by default in Settings, sending
+  nothing but the plain HTTP request itself (no telemetry, no journal
+  data, no identifying payload) - see "Auto-update" below.
 - **Build tooling:** `scripts/build.py` (stdlib `shutil`/`zipfile` only).
   CI/release run on GitHub Actions.
 
@@ -454,14 +454,14 @@ the Stack section above true even though the plugin isn't fully offline
 anymore.
 
 - **Enable/disable:** `edmmm.settings.configuration.auto_update` (a
-  regular Settings-tab checkbox, on by default) is read once by
-  `load.py.plugin_start3()` and passed into `check_async()` - `update.py`
-  deliberately never imports `edmmm.settings` itself, to avoid a
-  settings.py/update.py import cycle (settings.py needs `update.py`'s
-  `RELEASES_PAGE_URL` for its version hyperlink). A `disable-auto-update.txt`
-  sentinel file dropped in the plugin folder overrides the checkbox
-  unconditionally - the dev handbrake for a copy you're actively
-  hand-editing.
+  regular Settings-tab checkbox, **off by default** - this is opt-in, not
+  opt-out) is read once by `load.py.plugin_start3()` and passed into
+  `check_async()` - `update.py` deliberately never imports
+  `edmmm.settings` itself, to avoid a settings.py/update.py import cycle
+  (settings.py needs `update.py`'s `RELEASES_PAGE_URL` for its version
+  hyperlink). A `disable-auto-update.txt` sentinel file dropped in the
+  plugin folder overrides the checkbox unconditionally regardless of its
+  state - the dev handbrake for a copy you're actively hand-editing.
 - **Staging, not replacing:** `_apply()` extracts the downloaded zip over
   `plugin_dir` file-by-file (stripping the zip's top-level `EDMMM/` folder,
   since `plugin_dir` already *is* that folder), so only files the new
@@ -482,13 +482,19 @@ anymore.
   this restart, which is the one-time "Updated to vX" confirmation
   `ui.py` shows on the main panel (auto-clears after 15s - see
   `_UPDATED_MESSAGE_DURATION_MS`).
-- **Main-panel status line is otherwise silent.** Unlike EDPPMT (which
-  always shows a version label), EDMMM's header only grows an extra line
-  while there's actually something to say - downloading, staged-and-
-  awaiting-restart, or just-applied - matching the rest of the panel's
-  "only show a warning when there's something to warn about" style (the
-  Settings tab's version label is always visible, and always links to
-  `RELEASES_PAGE_URL`, whether or not an update is pending).
+- **Main-panel status line only ever shows "Updated to vX".** Unlike
+  EDPPMT (which always shows a version label, plus downloading/staged
+  states), EDMMM keeps the plugin version itself out of the main panel
+  entirely - it lives only in the Settings tab. `_display_update_status()`
+  in `ui.py` renders nothing at all unless `kind == "updated"`; the
+  `"downloading"`/`"downloaded"` states are still tracked
+  (`ui.set_update_downloading`/`set_update_downloaded`, still logged by
+  `update.py` itself) but deliberately produce no visible row - a
+  by-request simplification, not an oversight. This is what "only show a
+  warning when there's something to warn about" (already the style for
+  every other warning on the panel) collapses down to once the version
+  number's permanent home moved to Settings: only the one-time
+  post-restart confirmation remains.
 - **Thread-to-UI marshaling:** `UpdateManager`'s background thread never
   touches Tkinter directly - its `on_downloading`/`on_ready` callbacks
   (wired up in `load.py`) go through `ui.run_on_main_thread()`, which

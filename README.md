@@ -130,29 +130,28 @@ Neither of these is a mission — they aren't accepted, they never appear in a `
 
 - **Header shows total mission count** (x/20 — the game's limit) and current game mode (Solo / Open / Private Group with group name / CQC).
 - **Per-commander profiles** — each commander's missions, kills, and progress are tracked separately; switching commanders switches the entire view. This is what makes EDMMM alt-friendly.
-- **All mission/kill/colonisation/Community Goal tracking is offline** — that data only ever comes from your local journal files and nothing about it is sent anywhere. The one exception is auto-update, an opt-out check against GitHub Releases; see below.
+- **All mission/kill/colonisation/Community Goal tracking is offline** — that data only ever comes from your local journal files and nothing about it is sent anywhere. The one exception is auto-update, an opt-in check against GitHub Releases (off by default); see below.
 - **Theme-aware** — the panel respects EDMC's light and dark themes, so it's readable no matter which one you use.
 - **Its own rotating log file**, separate from EDMC's, so plugin issues can be diagnosed without digging through EDMC's log.
 
 ### Auto-update
 
-Once per EDMC start, the plugin checks GitHub for a newer release and, if one exists, downloads and stages it automatically — nothing is sent in that request beyond the request itself (no telemetry, no journal data). The staged files only take effect the next time you restart EDMC.
+**Off by default.** Turn on "Automatically download updates" in Settings (below) if you want it: once per EDMC start, the plugin then checks GitHub for a newer release and, if one exists, downloads and stages it automatically — nothing is sent in that request beyond the request itself (no telemetry, no journal data). The staged files only take effect the next time you restart EDMC; nothing is overwritten while EDMC is running.
 
-- The header shows a status line only while there's something to say: "Downloading vX.Y.Z…", "Restart EDMC to update to vX.Y.Z" once staged, or "Updated to vX.Y.Z" for a few seconds right after it takes effect. It's silent the rest of the time.
-- **Turn it off** in Settings (below) if you'd rather update manually via the [Releases page](https://github.com/rwharpernc/EDMMM/releases/latest) — the same page the header/Settings version link points to either way.
-- Nothing is overwritten while EDMC is running; a staged update just waits for the next restart.
+- The plugin version lives only in the Settings tab (a clickable link to the [Releases page](https://github.com/rwharpernc/EDMMM/releases/latest)) — the main panel stays silent about it except for one thing: right after a staged update takes effect, the header briefly shows "Updated to vX.Y.Z" for a few seconds, then goes back to showing nothing there.
+- Leave it off (the default) to update manually via that same Releases page instead.
 
 ### Settings
 
-The plugin's options tab is in EDMC under **File → Settings → EDMMM**. It has a checkbox for each of these, all on by default:
+The plugin's options tab is in EDMC under **File → Settings → EDMMM**. It has a checkbox for each of these:
 
-- Kill progress bars
-- Delta column
-- Sum row (per-faction totals on the massacre pages)
-- Mission count badge
-- Target settlement list (Ground page)
-- Game mode
-- Automatically download updates (see [Auto-update](#auto-update) above)
+- Kill progress bars *(on by default)*
+- Delta column *(on by default)*
+- Sum row (per-faction totals on the massacre pages) *(on by default)*
+- Mission count badge *(on by default)*
+- Target settlement list (Ground page) *(on by default)*
+- Game mode *(on by default)*
+- Automatically download updates *(off by default — see [Auto-update](#auto-update) above)*
 
 The tab also shows the installed plugin version — a clickable link to the Releases page — and the location of its log file.
 
