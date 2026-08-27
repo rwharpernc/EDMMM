@@ -16,7 +16,7 @@ EDMC plugin that shows every active mission — with detailed kill-progress trac
   - [Navigation](#navigation)
   - [Pages 1–2: Massacre (Space) \& Settlement Raids (Ground)](#pages-12-massacre-space--settlement-raids-ground)
   - [Pages 3–7: All Other Missions](#pages-37-all-other-missions)
-  - [Pages 8–9: Colonisation \& Community Goals](#pages-89-colonisation--community-goals)
+  - [Page 8: Community Goals](#page-8-community-goals)
   - [Header \& General](#header--general)
 - [Auto-update](#auto-update)
 - [How kill progress is estimated (Massacre / Settlement Raids pages)](#how-kill-progress-is-estimated-massacre--settlement-raids-pages)
@@ -98,7 +98,7 @@ what's being explored.
 
 ### Navigation
 
-- The panel is a set of **9 category pages** — click ◂ / ▸ to page between
+- The panel is a set of **8 category pages** — click ◂ / ▸ to page between
   them; empty categories are skipped automatically.
 - **All** — click the "All" link next to the page arrows to open a separate
   window listing every active mission across every category at once, in a
@@ -145,16 +145,13 @@ in-game.
 - **Combat** — assassinations, black ops, piracy and Thargoid-related
   missions, megaship disables, skimmer clearing, and other non-massacre
   combat missions.
-- **Trade & Mining** — delivery, courier, collection, mining, salvage, and
-  colonisation/construction *supply missions* (accepted deliveries that
-  happen to be colonisation-flavored). Colonisation *construction-depot
-  progress* itself — the build as a whole, not any one delivery mission —
-  has its own page; see [Pages 8–9](#pages-89-colonisation--community-goals)
-  below. Mining missions get an extra **"Mine via: ..."** line naming
+- **Trade & Mining** — delivery, courier, collection, mining, and salvage
+  missions. Mining missions get an extra **"Mine via: ..."** line naming
   which extraction method(s) - Core, Laser Surface, Sub-surface Deposit -
   the target commodity typically comes from (a best-effort
   community-sourced hint, not a mission field, so a handful of rare
   minerals list more than one method rather than guess).
+- Colonisation missions are deliberately not shown anywhere on the panel.
 - **Passenger** — VIP, bulk, sightseeing, evacuation, and prisoner-transport
   missions.
 - **Covert / On-Foot Ops** — hacking, sabotage, heists, and other on-foot
@@ -178,19 +175,14 @@ wing-shareable reward split shown in brackets is currently only rendered
 on the Massacre & Settlement Raids pages above — pages 3–7 show the full
 reward with no wing indicator.
 
-### Pages 8–9: Colonisation & Community Goals
+### Page 8: Community Goals
 
-Neither of these is a mission — they aren't accepted, never appear in a
-`MissionAccepted` event, and don't count toward your 20-mission cap. Each
-still gets its own page because both are ongoing group efforts with a
+Not a mission — Community Goals aren't accepted, never appear in a
+`MissionAccepted` event, and don't count toward your 20-mission cap. It
+still gets its own page because it's an ongoing group effort with a
 progress bar, the same shape as a mission stack even though the
 underlying game system is different.
 
-- **Colonisation** — one card per construction depot you've docked at
-  recently: overall build progress, the commodities still most needed
-  (capped to keep the card short, with a "+N more" summary), and your own
-  delivered total. A finished depot shows **✓ Complete** instead of a
-  needs list.
 - **Community Goals** — one card per CG the game has told you about that
   hasn't expired yet: your personal contribution, the community's tier
   reached (out of the top tier), your credit reward at that tier, a
@@ -213,7 +205,7 @@ The header shows:
 
 Also:
 
-- **All mission/kill/colonisation/CG tracking is offline** — see
+- **All mission/kill/CG tracking is offline** — see
   [File access](#file-access) below. The one exception is auto-update, an
   opt-in check against GitHub Releases (off by default); see next.
 - **Theme-aware** — the panel respects EDMC's light and dark themes.
@@ -286,7 +278,7 @@ The plugin reads your Elite Dangerous journal files (last 2 weeks) on
 startup. The only outbound web call it ever makes is the opt-out
 auto-update check described above (a GitHub Releases API request and,
 when a newer version exists, a zip download) - nothing else is sent
-anywhere, and mission/kill/colonisation/CG data never leaves your machine.
+anywhere, and mission/kill/CG data never leaves your machine.
 
 ## Acknowledgements
 

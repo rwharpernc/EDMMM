@@ -15,7 +15,6 @@ The plugin's runtime code lives in [`EDMMM/`](EDMMM):
   - `kill_tracker.py` — tracks bounty/redirect evidence used to estimate massacre kill progress.
   - `mission_types.py` — classifies missions into categories (see below).
   - `mining_methods.py` — static commodity-to-mining-method lookup for mining missions (see below).
-  - `colonisation_state.py` — tracks construction-depot progress and deliveries, per commander.
   - `community_goal_state.py` — tracks Community Goal contribution and progress, per commander.
   - `game_mode.py` — tracks Solo/Open/Private Group status.
   - `update.py` — checks GitHub Releases and self-updates (see below).
@@ -47,6 +46,8 @@ Mission-category detection (`mission_types.py`) uses name-pattern matching again
 - PRs adding hints for mission types we don't recognize yet are especially welcome.
 
 Example: add the mission's internal name to the relevant category's `_..._HINTS` tuple in `mission_types.py` (e.g. `_COMBAT_HINTS`, `_TRADE_HINTS`).
+
+Colonisation missions (`mission_types.is_colonisation_mission`) are a deliberate exception: they're filtered out of `mission_state.py` entirely rather than bucketed into a category, per user preference - they never reach `classify()` or any panel page.
 
 ## Mining method lookup
 

@@ -35,7 +35,7 @@ _COMBAT_HINTS = ("assassinate", "assassination", "disable", "skimmer", "conflict
                  "tacticaltakedown", "reclamationpoint", "biohazardtakedown",
                  "rapidresponse")
 _TRADE_HINTS = ("delivery", "courier", "collect", "mining", "salvage",
-                "colonisation", "communitygoal", "smuggle")
+                "communitygoal", "smuggle")
 _PASSENGER_HINTS = ("passenger", "sightseeing", "vip", "bulk", "evacuation",
                     "polprisoner")
 _COVERT_HINTS = ("hack", "covert", "heist", "sabotage", "reboot", "download",
@@ -72,6 +72,14 @@ def is_massacre_shaped(event: dict) -> bool:
 def is_illegal(event: dict) -> bool:
     name = event.get("Name", "").lower()
     return any(hint in name for hint in _ILLEGAL_HINTS)
+
+
+def is_colonisation_mission(event: dict) -> bool:
+    """True for missions accepted in support of a colonisation effort
+    (Mission_ColonisationDelivery, Mission_ColonisationBeacon, ...) -
+    excluded from every mission page entirely rather than bucketed into a
+    category, per user preference."""
+    return "colonisation" in event.get("Name", "").lower()
 
 
 def is_mining_mission(event: dict) -> bool:

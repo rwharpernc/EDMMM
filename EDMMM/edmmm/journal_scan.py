@@ -6,9 +6,6 @@ Collects, per CMDR:
 - Bounty events (used to estimate kill progress)
 - MissionRedirected mission IDs (authoritative "objective complete" signal)
 - LoadGame events (game mode: Solo / Open / Private Group)
-- Docked events (station/system names for colonisation depots, which carry
-  no location of their own), ColonisationConstructionDepot snapshots, and
-  ColonisationContribution deliveries
 - CommunityGoal events (Community Goal progress and contribution)
 """
 import datetime as dt
@@ -46,21 +43,11 @@ class ScanResult:
     """CMDR -> game mode from their most recent LoadGame event"""
     group_by_cmdr: dict[str, str] = field(default_factory=dict)
     """CMDR -> private group name, only set when mode is "Group\""""
-    colonisation_depots_by_cmdr: dict[str, dict[int, dict]] = field(default_factory=dict)
-    """CMDR -> (MarketID -> latest ColonisationConstructionDepot event)"""
-    colonisation_locations_by_cmdr: dict[str, dict[int, dict]] = field(default_factory=dict)
-    """CMDR -> (MarketID -> {"station": ..., "system": ...}), from Docked
-    events - ColonisationConstructionDepot/Contribution carry no location
-    of their own."""
-    colonisation_contributions_by_cmdr: dict[str, dict[int, dict[str, int]]] = field(default_factory=dict)
-    """CMDR -> (MarketID -> (commodity display name -> cumulative amount
-    this CMDR has delivered))"""
     community_goals_by_cmdr: dict[str, dict[int, dict]] = field(default_factory=dict)
     """CMDR -> (CGID -> latest CurrentGoals sub-entry seen for that CGID)"""
 
 
 _RELEVANT_EVENTS = ("Commander", "MissionAccepted", "Bounty", "MissionRedirected", "LoadGame",
-                    "Docked", "ColonisationConstructionDepot", "ColonisationContribution",
                     "CommunityGoal")
 
 
@@ -124,25 +111,6 @@ def __scan_one_log(file_path: Path, result: ScanResult):
                             result.group_by_cmdr[cmdr] = group
                         else:
                             result.group_by_cmdr.pop(cmdr, None)
-                    elif event == "Docked":
-                        market_id = line_as_json.get("MarketID")
-                        if market_id:
-                            result.colonisation_locations_by_cmdr.setdefault(cmdr, {})[market_id] = {
-                                "station": line_as_json.get("StationName", ""),
-                                "system": line_as_json.get("StarSystem", ""),
-                            }
-                    elif event == "ColonisationConstructionDepot":
-                        market_id = line_as_json.get("MarketID")
-                        if market_id:
-                            result.colonisation_depots_by_cmdr.setdefault(cmdr, {})[market_id] = line_as_json
-                    elif event == "ColonisationContribution":
-                        market_id = line_as_json.get("MarketID")
-                        if market_id:
-                            totals = result.colonisation_contributions_by_cmdr.setdefault(
-                                cmdr, {}).setdefault(market_id, {})
-                            for item in line_as_json.get("Contributions", []):
-                                name = item.get("Name_Localised") or item.get("Name", "?")
-                                totals[name] = totals.get(name, 0) + item.get("Amount", 0)
                     elif event == "CommunityGoal":
                         goals = result.community_goals_by_cmdr.setdefault(cmdr, {})
                         for goal_entry in line_as_json.get("CurrentGoals", []):

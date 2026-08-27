@@ -3,6 +3,19 @@
 All notable changes to this project are documented here. Versions match
 `EDMMM/version` and the git tag each release is built from.
 
+## [0.10.0]
+
+- Removed colonisation tracking, per user feedback that colonisation
+  missions cluttering the mission pages were unwanted. Colonisation
+  missions (e.g. `Mission_ColonisationDelivery`) are now filtered out of
+  every mission page entirely, via a new `mission_types.is_colonisation_mission()`
+  check applied in `mission_state.py` before categorization - they
+  previously landed on the Trade & Mining page. The separate Colonisation
+  depot-tracking page is also gone: `colonisation_state.py` is deleted,
+  along with its `ColonisationConstructionDepot`/`ColonisationContribution`
+  event handling in `load.py`/`journal_scan.py` and its page/rendering in
+  `ui.py`. The panel is back down to 8 category pages.
+
 ## [0.9.0]
 
 - Added auto-update, **off by default** (opt-in, not opt-out): once

@@ -2,8 +2,8 @@
 Renders EDMMM's panel in EDMC's main window as a set of pages you scroll
 between with the ◂ / ▸ nav: two detailed kill-stacking pages (Massacre
 Space, Settlement Raids Ground), a handful of general pages covering every
-other mission type, and two non-mission pages (Colonisation, Community
-Goals) tacked onto the same nav - see _PAGE_ORDER/_PAGE_LABELS below.
+other mission type, and one non-mission page (Community Goals) tacked onto
+the same nav - see _PAGE_ORDER/_PAGE_LABELS below.
 Mission pages are
 separate rather than merged because kill-stacking math doesn't generalize
 to missions that have no kill count - see edmmm/mission_types.py for how a
@@ -36,7 +36,6 @@ from typing import Optional
 from theme import theme
 from ttkHyperlinkLabel import HyperlinkLabel
 
-import edmmm.colonisation_state as colonisation_state
 import edmmm.community_goal_state as community_goal_state
 import edmmm.game_mode as game_mode
 import edmmm.mining_methods as mining_methods
@@ -45,7 +44,6 @@ import edmmm.mission_types as mission_types
 import edmmm.settings
 import edmmm.update as update
 from edmmm import kill_tracker
-from edmmm.colonisation_state import ColonisationDepot
 from edmmm.community_goal_state import CommunityGoal
 from edmmm.logger_factory import logger
 from edmmm.massacre_state import (MassacreMission, compute_progress,
@@ -140,22 +138,14 @@ instead of running together."""
 
 _MASSACRE_CATEGORIES = (mission_types.MASSACRE_SPACE, mission_types.MASSACRE_GROUND)
 
-_COLONISATION_PAGE = "colonisation"
 _COMMUNITY_GOAL_PAGE = "community_goal"
-"""Neither is a mission_types category - colonisation depots and Community
-Goals aren't missions at all (see colonisation_state.py/
-community_goal_state.py) - but the nav pages between them the same way, so
-both are folded into the same page order/label lookup rather than
-mission_types.CATEGORY_ORDER, which stays strictly about classifying
-MissionAccepted events."""
-_PAGE_ORDER: list[str] = mission_types.CATEGORY_ORDER + [_COLONISATION_PAGE, _COMMUNITY_GOAL_PAGE]
+"""Not a mission_types category - Community Goals aren't missions at all
+(see community_goal_state.py) - but it pages the same way, so it's folded
+into the same page order/label lookup rather than mission_types.CATEGORY_ORDER,
+which stays strictly about classifying MissionAccepted events."""
+_PAGE_ORDER: list[str] = mission_types.CATEGORY_ORDER + [_COMMUNITY_GOAL_PAGE]
 _PAGE_LABELS: dict[str, str] = {**mission_types.CATEGORY_LABELS,
-                                _COLONISATION_PAGE: "Colonisation",
                                 _COMMUNITY_GOAL_PAGE: "Community Goals"}
-_COLONISATION_RESOURCE_CAP = 6
-"""Max still-needed commodities listed per depot before collapsing the rest
-into a "+N more" line - a fully-stocked depot's build list can run past 20
-commodities, too many for the narrow panel."""
 
 _MAX_PANEL_HEIGHT = 480
 """Cap on the panel's visible height in pixels before it becomes a scroll
@@ -702,83 +692,6 @@ def _display_all_missions_table(frame: tk.Frame, missions: list[mission_state.Mi
         tk.Label(frame, text=expiry_text).grid(row=row, column=3, sticky=tk.E, pady=(0, 3))
 
 
-def _display_colonisation_depot(frame: tk.Frame, depot: ColonisationDepot, row: int) -> int:
-    """A colonisation depot as a stacked card: station/system header,
-    overall progress (or a Complete/Failed badge), the commodities still
-    most needed (capped, see _COLONISATION_RESOURCE_CAP), and this CMDR's
-    own delivered total."""
-    fonts = _get_fonts()
-
-    title_line = _line(frame, row, pady=(0, _LINE_PAD))
-    title = depot.station or depot.system or f"Market {depot.market_id}"
-    tk.Label(title_line, text=title, wraplength=_WRAP, justify=tk.LEFT,
-             anchor=tk.W, font=fonts["bold"]).pack(side=tk.LEFT, fill=tk.X, expand=True)
-    row += 1
-
-    if depot.system and depot.station:
-        system_line = _line(frame, row, pady=(0, _LINE_PAD))
-        tk.Label(system_line, text=depot.system, font=fonts["small"]).pack(side=tk.LEFT)
-        row += 1
-
-    status_line = _line(frame, row, pady=(0, _LINE_PAD))
-    if depot.failed:
-        tk.Label(status_line, text="⚠ Construction failed", font=fonts["bold"]).pack(side=tk.LEFT)
-    elif depot.complete:
-        tk.Label(status_line, text="✓ Complete", font=fonts["bold"]).pack(side=tk.LEFT)
-    else:
-        _progress_bar(status_line, depot.progress, 1.0).pack(side=tk.LEFT)
-        tk.Label(status_line, text=f"{depot.progress:.0%}").pack(side=tk.LEFT, padx=(8, 0))
-    row += 1
-
-    if not depot.complete and not depot.failed:
-        needed = sorted((r for r in depot.resources if r.provided < r.required),
-                        key=lambda r: r.required - r.provided, reverse=True)
-        shown = needed[:_COLONISATION_RESOURCE_CAP]
-        for resource in shown:
-            res_line = _line(frame, row)
-            tk.Label(res_line, text=resource.name, wraplength=_WRAP_NAME,
-                     justify=tk.LEFT, anchor=tk.W, font=fonts["small"]).pack(
-                side=tk.LEFT, fill=tk.X, expand=True)
-            tk.Label(res_line, text=f"{resource.provided}/{resource.required}",
-                     font=fonts["small"]).pack(side=tk.RIGHT)
-            row += 1
-
-        remaining = len(needed) - len(shown)
-        if remaining > 0:
-            more_line = _line(frame, row)
-            noun = "commodity" if remaining == 1 else "commodities"
-            tk.Label(more_line, text=f"+{remaining} more {noun} needed",
-                     font=fonts["small"]).pack(side=tk.LEFT)
-            row += 1
-
-    contributed_total = sum(depot.contributed.values())
-    if contributed_total:
-        contrib_line = _line(frame, row)
-        tk.Label(contrib_line,
-                 text=f"You delivered: {contributed_total:,} units across "
-                      f"{len(depot.contributed)} commodit"
-                      f"{'y' if len(depot.contributed) == 1 else 'ies'}",
-                 wraplength=_WRAP, justify=tk.LEFT, font=fonts["small"]).pack(side=tk.LEFT)
-        row += 1
-
-    return row
-
-
-def _display_colonisation_page(frame: tk.Frame, depots: dict[int, ColonisationDepot],
-                               row: int, no_data_text: str) -> int:
-    if not depots:
-        return _display_no_missions(frame, row, no_data_text)
-
-    # Incomplete depots first (the ones still needing attention), then
-    # alphabetically by name.
-    ordered = sorted(depots.values(), key=lambda d: (d.complete, d.station or d.system))
-    for i, depot in enumerate(ordered):
-        if i > 0:
-            row = _separator(frame, row, pady=_CARD_GAP)
-        row = _display_colonisation_depot(frame, depot, row)
-    return row
-
-
 def _display_community_goal_card(frame: tk.Frame, goal: CommunityGoal, row: int) -> int:
     """A Community Goal as a stacked card: title, system/market, a tier
     progress bar (community-wide, not personal - see CommunityGoal.tier_reached),
@@ -846,8 +759,6 @@ class UI:
         self.__frame: Optional[tk.Frame] = None
         self.__massacre_missions: Optional[dict[int, MassacreMission]] = None
         self.__all_missions_data: Optional[dict[int, mission_state.Mission]] = None
-        self.__colonisation_depots: dict[int, ColonisationDepot] = colonisation_state.get_depots(
-            colonisation_state.current_cmdr)
         self.__community_goals: dict[int, CommunityGoal] = community_goal_state.get_goals(
             community_goal_state.current_cmdr)
         self.__canvas: Optional[tk.Canvas] = None
@@ -986,7 +897,6 @@ class UI:
         for mission in (self.__all_missions_data or {}).values():
             if mission.category not in _MASSACRE_CATEGORIES:
                 counts[mission.category] += 1
-        counts[_COLONISATION_PAGE] = len(self.__colonisation_depots)
         counts[_COMMUNITY_GOAL_PAGE] = sum(
             1 for g in self.__community_goals.values() if not _is_expired(g.expiry))
         return counts
@@ -1031,10 +941,6 @@ class UI:
         self.__all_missions_data = data
         self.update_ui()
 
-    def notify_about_new_colonisation_state(self, data: dict[int, ColonisationDepot]):
-        self.__colonisation_depots = data
-        self.update_ui()
-
     def notify_about_new_community_goal_state(self, data: dict[int, CommunityGoal]):
         self.__community_goals = data
         self.update_ui()
@@ -1070,10 +976,6 @@ class UI:
 
     def __render_current_page(self, frame: tk.Frame, row: int) -> int:
         category = self.__current_category
-
-        if category == _COLONISATION_PAGE:
-            return _display_colonisation_page(frame, self.__colonisation_depots, row,
-                                              "No colonisation depot visited recently.")
 
         if category == _COMMUNITY_GOAL_PAGE:
             active = {cg_id: g for cg_id, g in self.__community_goals.items()
@@ -1225,15 +1127,10 @@ def handle_new_mission_state(data: Optional[dict[int, mission_state.Mission]]):
     ui.notify_about_new_mission_state(data)
 
 
-def handle_new_colonisation_state(data: dict[int, ColonisationDepot]):
-    ui.notify_about_new_colonisation_state(data)
-
-
 def handle_new_community_goal_state(data: dict[int, CommunityGoal]):
     ui.notify_about_new_community_goal_state(data)
 
 
 massacre_mission_listeners.append(handle_new_massacre_mission_state)
 mission_state.mission_listeners.append(handle_new_mission_state)
-colonisation_state.colonisation_listeners.append(handle_new_colonisation_state)
 community_goal_state.community_goal_listeners.append(handle_new_community_goal_state)

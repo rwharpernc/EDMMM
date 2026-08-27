@@ -19,7 +19,7 @@ EDMC plugin that shows every active mission — with detailed kill-progress trac
   - [Navigation](#navigation)
   - [Pages 1–2: Massacre (Space) \& Settlement Raids (Ground)](#pages-12-massacre-space--settlement-raids-ground)
   - [Pages 3–7: All Other Missions](#pages-37-all-other-missions)
-  - [Pages 8–9: Colonisation \& Community Goals](#pages-89-colonisation--community-goals)
+  - [Page 8: Community Goals](#page-8-community-goals)
   - [Header \& General](#header--general)
   - [Auto-update](#auto-update)
   - [Settings](#settings)
@@ -85,7 +85,7 @@ Several new features are currently under research and design — see
 
 ### Navigation
 
-- The plugin adds a panel to EDMC showing your missions, plus colonisation and Community Goal progress, across **9 category pages**. Use the ◂ / ▸ arrows to page between them — empty categories are automatically skipped.
+- The plugin adds a panel to EDMC showing your missions, plus Community Goal progress, across **8 category pages**. Use the ◂ / ▸ arrows to page between them — empty categories are automatically skipped.
 - **All** — click the "All" link next to the page arrows to open a separate window listing every active mission across every category at once, in a wide table (not limited to EDMC's narrow panel width). It stays live while open.
 - **Only active missions are ever shown** — the moment you hand in, abandon, or fail a mission, it drops off the panel. Nothing lingers after it's no longer active.
 - If you have no missions assigned at all, the panel shows a message saying so instead of the page selector.
@@ -110,7 +110,8 @@ These two pages track the *same* underlying mission type — one with a kill cou
 **Organized by type for quick scanning.**
 
 - **Combat** — assassinations, black ops, piracy and Thargoid-related missions, megaship disables, skimmer clearing, and other non-massacre combat missions.
-- **Trade & Mining** — delivery, courier, collection, mining, salvage, and colonisation/construction *supply missions* (accepted deliveries that happen to be colonisation-flavored). Colonisation *construction-depot progress* itself — the build as a whole, not any one delivery mission — has its own page; see below. Mining missions get an extra **"Mine via: ..."** line naming which extraction method(s) — Core, Laser Surface, Sub-surface Deposit — the target commodity typically comes from (a best-effort community-sourced hint, not a mission field, so a handful of rare minerals list more than one method rather than guess).
+- **Trade & Mining** — delivery, courier, collection, mining, and salvage missions. Mining missions get an extra **"Mine via: ..."** line naming which extraction method(s) — Core, Laser Surface, Sub-surface Deposit — the target commodity typically comes from (a best-effort community-sourced hint, not a mission field, so a handful of rare minerals list more than one method rather than guess).
+- Colonisation missions are deliberately not shown anywhere on the panel.
 - **Passenger** — VIP, bulk, sightseeing, evacuation, and prisoner-transport missions.
 - **Covert / On-Foot Ops** — hacking, sabotage, heists, and other on-foot missions that aren't settlement raids.
 - **Other** — anything that doesn't fit the above (a handful of obscure or new mission types may land here until their naming pattern is recognized).
@@ -119,18 +120,17 @@ Each mission shows: giver faction, status (**Pending** or **✓ Complete** — c
 
 **Wing missions** (Wing Mining, Wing Trading, Wing Massacre, etc.) are tracked and categorized the same as any other mission, but the wing-shareable reward split is currently only displayed on the Massacre & Settlement Raids pages above — pages 3–7 show the full reward with no wing indicator.
 
-### Pages 8–9: Colonisation & Community Goals
+### Page 8: Community Goals
 
-Neither of these is a mission — they aren't accepted, they never appear in a `MissionAccepted` event, and they don't count toward your 20-mission cap. Each still gets its own page because both are ongoing group efforts with a progress bar, the same shape as a mission stack even though the underlying game system is different.
+Not a mission — Community Goals aren't accepted, they never appear in a `MissionAccepted` event, and they don't count toward your 20-mission cap. It still gets its own page because it's an ongoing group effort with a progress bar, the same shape as a mission stack even though the underlying game system is different.
 
-- **Colonisation** — one card per construction depot you've docked at recently: overall build progress, the commodities still most needed (capped to keep the card short, with a "+N more" summary), and your own delivered total. A depot that's finished shows **✓ Complete** instead of a needs list.
 - **Community Goals** — one card per CG the game has told you about that hasn't expired yet: your personal contribution, the community's tier reached (out of the top tier), your credit reward at that tier, a **🏆 Top rank** badge if you're in the leaderboard, and time left. A CG the game reports as already past its deadline drops off this page on its own — there's no dismiss button, since the game never sends an explicit "this CG is over" signal either.
 
 ### Header & General
 
 - **Header shows total mission count** (x/20 — the game's limit) and current game mode (Solo / Open / Private Group with group name / CQC).
 - **Per-commander profiles** — each commander's missions, kills, and progress are tracked separately; switching commanders switches the entire view. This is what makes EDMMM alt-friendly.
-- **All mission/kill/colonisation/Community Goal tracking is offline** — that data only ever comes from your local journal files and nothing about it is sent anywhere. The one exception is auto-update, an opt-in check against GitHub Releases (off by default); see below.
+- **All mission/kill/Community Goal tracking is offline** — that data only ever comes from your local journal files and nothing about it is sent anywhere. The one exception is auto-update, an opt-in check against GitHub Releases (off by default); see below.
 - **Theme-aware** — the panel respects EDMC's light and dark themes, so it's readable no matter which one you use.
 - **Its own rotating log file**, separate from EDMC's, so plugin issues can be diagnosed without digging through EDMC's log.
 

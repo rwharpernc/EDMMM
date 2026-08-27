@@ -19,7 +19,6 @@ import tkinter
 from os.path import basename, dirname
 from typing import Any, Optional
 
-import edmmm.colonisation_state as colonisation_state
 import edmmm.community_goal_state as community_goal_state
 import edmmm.game_mode as game_mode
 import edmmm.kill_tracker as kill_tracker
@@ -54,16 +53,12 @@ def plugin_start3(plugin_dir: str) -> str:
                                 scan_result.redirected_by_cmdr,
                                 scan_result.redirect_destinations_by_cmdr)
         game_mode.initialize(scan_result.mode_by_cmdr, scan_result.group_by_cmdr)
-        colonisation_state.initialize(scan_result.colonisation_depots_by_cmdr,
-                                      scan_result.colonisation_locations_by_cmdr,
-                                      scan_result.colonisation_contributions_by_cmdr)
         community_goal_state.initialize(scan_result.community_goals_by_cmdr)
     except Exception:
         logger.exception("Journal scan failed - starting with empty state")
         mission_repository_module.set_new_repo({})
         kill_tracker.initialize({}, {}, {})
         game_mode.initialize({}, {})
-        colonisation_state.initialize({}, {}, {})
         community_goal_state.initialize({})
 
     logger.info("Awaiting Missions-Event to build the active mission list")
@@ -97,8 +92,8 @@ def plugin_app(parent: tkinter.Frame) -> tkinter.Frame:
     return parent
 
 
-def journal_entry(cmdr: str, _is_beta: bool, system: str,
-                  station: str, entry: dict[str, Any], _state: dict[str, Any]):
+def journal_entry(cmdr: str, _is_beta: bool, _system: str,
+                  _station: str, entry: dict[str, Any], _state: dict[str, Any]):
     event = entry.get("event")
     repo = mission_repository_module.mission_repository
 
@@ -106,7 +101,6 @@ def journal_entry(cmdr: str, _is_beta: bool, system: str,
         # Order matters: the kill tracker must know the CMDR before the
         # repository emits, because progress is computed for the current CMDR.
         kill_tracker.set_current_cmdr(cmdr)
-        colonisation_state.set_current_cmdr(cmdr)
         community_goal_state.set_current_cmdr(cmdr)
         if repo is not None:
             repo.set_current_cmdr(cmdr)
@@ -133,16 +127,6 @@ def journal_entry(cmdr: str, _is_beta: bool, system: str,
     elif event == "Bounty":
         # Fired for both ship kills and on-foot kills of wanted targets.
         kill_tracker.add_bounty(cmdr, entry)
-
-    elif event == "ColonisationConstructionDepot":
-        # Fired while docked at a construction site: a fresh snapshot of its
-        # overall progress and resource requirements. Carries no location of
-        # its own - system/station are EDMC's own current-docked values.
-        colonisation_state.update_depot(cmdr, entry, system, station)
-
-    elif event == "ColonisationContribution":
-        # Cargo just delivered to a construction depot by this CMDR.
-        colonisation_state.add_contribution(cmdr, entry, system, station)
 
     elif event == "CommunityGoal":
         # Not scoped to the current station - CurrentGoals can list several

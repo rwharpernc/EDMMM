@@ -76,8 +76,9 @@ _mission_store: Optional[dict[int, Mission]] = None
 def __handle_new_missions_state(data: Optional[dict[int, dict]]):
     """
     Callback used by the Mission Repository when the active mission set
-    changes (including commander switches). Unlike massacre_state, nothing
-    is filtered out here - every active mission is included.
+    changes (including commander switches). Colonisation missions are
+    dropped entirely (not just recategorized) per user preference; every
+    other active mission is included.
     """
     global _mission_store
 
@@ -87,7 +88,8 @@ def __handle_new_missions_state(data: Optional[dict[int, dict]]):
         return
 
     _mission_store = {mission_id: __build_from_event(event)
-                      for mission_id, event in data.items()}
+                      for mission_id, event in data.items()
+                      if not mission_types.is_colonisation_mission(event)}
     logger.info(f"All-missions view tracking {len(_mission_store)} active mission(s)")
 
     __emit()
