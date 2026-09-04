@@ -157,7 +157,13 @@ small and updates are infrequent (a mission accept/complete/expire, or the
 60-second refresh tick — not per-frame). The optional "All missions" popup
 (a `Toplevel`, opened from the category nav) follows the same
 rebuild-on-notify pattern: `update_ui` refreshes it too, whenever it's
-currently open.
+currently open. The per-mission detail popup (opened by clicking any
+mission card/row, or a row in the "All missions" popup) is a second
+`Toplevel` on the same pattern, tracked by mission ID rather than always
+showing "whatever's current" - `update_ui`'s refresh looks that ID back up
+in the latest mission data each time and falls back to a "no longer
+active" message if it's gone (handed in, abandoned, expired), rather than
+erroring.
 
 **Gotcha for any future `Toplevel`:** it must be parented to
 `self.__frame.winfo_toplevel()` (the actual EDMC root window), never to

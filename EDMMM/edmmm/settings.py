@@ -77,6 +77,15 @@ class Configuration:
 
     #######################################
     @property
+    def display_commodities_needed(self):
+        return config.get_bool(f"{self.plugin_name}.display_commodities_needed", default=True)
+
+    @display_commodities_needed.setter
+    def display_commodities_needed(self, value: bool):
+        config.set(f"{self.plugin_name}.display_commodities_needed", value)
+
+    #######################################
+    @property
     def auto_update(self):
         return config.get_bool(f"{self.plugin_name}.auto_update", default=False)
 
@@ -117,6 +126,8 @@ class Configuration:
             self.display_settlement = data["display_settlement"].get()
         if "display_game_mode" in keys:
             self.display_game_mode = data["display_game_mode"].get()
+        if "display_commodities_needed" in keys:
+            self.display_commodities_needed = data["display_commodities_needed"].get()
         if "auto_update" in keys:
             self.auto_update = data["auto_update"].get()
 
@@ -167,6 +178,8 @@ def __build_settings_ui(root) -> tk.Frame:
     __setting_changes["display_mission_count"] = tk.IntVar(value=configuration.display_mission_count)
     __setting_changes["display_settlement"] = tk.IntVar(value=configuration.display_settlement)
     __setting_changes["display_game_mode"] = tk.IntVar(value=configuration.display_game_mode)
+    __setting_changes["display_commodities_needed"] = tk.IntVar(
+        value=configuration.display_commodities_needed)
     __setting_changes["auto_update"] = tk.IntVar(value=configuration.auto_update)
 
     # Padding goes through .grid(), not the widget constructors: nb widgets
@@ -186,6 +199,8 @@ def __build_settings_ui(root) -> tk.Frame:
                        variable=__setting_changes["display_settlement"]),
         nb.Checkbutton(frame, text="Display Game Mode (Solo/Open/Private)",
                        variable=__setting_changes["display_game_mode"]),
+        nb.Checkbutton(frame, text="Display Commodities Needed (Trade & Mining)",
+                       variable=__setting_changes["display_commodities_needed"]),
     ]
     for entry in ui_settings_checkboxes:
         entry.grid(columnspan=2, padx=checkbox_offset, sticky=tk.W)
@@ -196,9 +211,13 @@ def __build_settings_ui(root) -> tk.Frame:
 
     version_row = nb.Frame(frame)  # type: ignore
     version_row.grid(sticky=tk.W, padx=checkbox_offset, pady=10)
-    nb.Label(version_row, text="EDMMM v").pack(side=tk.LEFT)
+    # .grid(), not .pack(): version_row's own themed background is already a
+    # grid-managed slave, and mixing geometry managers in the same container
+    # raises TclError.
+    nb.Label(version_row, text="EDMMM v").grid(row=0, column=0, sticky=tk.W)
     HyperlinkLabel(version_row, text=__read_version(), url=RELEASES_PAGE_URL,
-                   background=nb.Label().cget("background"), underline=True).pack(side=tk.LEFT)
+                   background=nb.Label().cget("background"), underline=True).grid(
+        row=0, column=1, sticky=tk.W)
     nb.Label(frame, text=f"Log file: {LOG_FILE}").grid(
         sticky=tk.W, padx=checkbox_offset)
 

@@ -95,6 +95,15 @@ def is_mining_mission(event: dict) -> bool:
     return "mining" in event.get("Name", "").lower()
 
 
+def needs_commodity_supply(event: dict) -> bool:
+    """True for missions where the commander must source the commodity
+    themselves - mining it, or buying/collecting it - as opposed to plain
+    Delivery missions, where the cargo was already handed over at
+    acceptance and there's nothing left to acquire."""
+    name = event.get("Name", "").lower()
+    return "mining" in name or "collect" in name
+
+
 def classify(event: dict) -> str:
     """Bucket a MissionAccepted event into one of the panel's category pages."""
     if is_massacre_shaped(event):

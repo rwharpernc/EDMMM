@@ -31,7 +31,7 @@ import random
 import tkinter as tk
 import tkinter.font as tkfont
 from dataclasses import dataclass, field
-from typing import Optional
+from typing import Callable, Optional
 
 from theme import theme
 from ttkHyperlinkLabel import HyperlinkLabel
@@ -255,6 +255,7 @@ class DisplaySettings:
         self.mission_count = config.display_mission_count
         self.settlement = config.display_settlement
         self.game_mode = config.display_game_mode
+        self.commodities_needed = config.display_commodities_needed
 
 
 _fonts: dict[str, tkfont.Font] = {}
@@ -290,6 +291,18 @@ def _apply_theme(widget: tk.Widget) -> None:
     for child in widget.winfo_children():
         if isinstance(child, tk.Frame):
             _apply_theme(child)
+
+
+def _bind_mission_click(widget: tk.Widget, mission_id: int,
+                        on_click: Callable[[int], None]) -> None:
+    """Makes an entire mission card clickable: binds a hand cursor and
+    <Button-1> on every widget in its subtree, not just the outer frame -
+    a click can land on any label, or the unfilled gaps between them, and
+    all of it should open that mission's detail popup."""
+    widget.configure(cursor="hand2")
+    widget.bind("<Button-1>", lambda _e: on_click(mission_id))
+    for child in widget.winfo_children():
+        _bind_mission_click(child, mission_id, on_click)
 
 
 def _line(frame: tk.Frame, row: int, pady: int = 0) -> tk.Frame:
@@ -591,57 +604,109 @@ def _display_massacre_data(frame: tk.Frame, data: MassacreData, settings: Displa
 
 
 def _display_all_missions_row(frame: tk.Frame, mission: mission_state.Mission,
-                               row: int) -> int:
+                               row: int, on_click: Callable[[int], None]) -> int:
     """A mission as a stacked card, one field per line: name, faction,
     status + reward, location, expiry. The name gets a full-width line to
     itself (rather than sharing one with the reward) so it only wraps once
-    it hits the panel's actual width, not a narrow column."""
+    it hits the panel's actual width, not a narrow column.
+
+    Built inside its own `card` frame (rather than laying lines directly
+    into `frame` as before) so the whole card - not just one label - can be
+    bound clickable in one recursive pass, opening a detail popup for this
+    mission (see ui.UI.__open_mission_detail)."""
     fonts = _get_fonts()
     cmdr = kill_tracker.current_cmdr
     is_complete, status_text = _mission_status(mission.id, cmdr)
     name_text = f"{mission.name}  ⚠ Illegal" if mission.is_illegal else mission.name
     reward_text = _fmt_millions(mission.reward) if mission.reward else "-"
 
-    name_line = _line(frame, row, pady=(0, _LINE_PAD))
+    card = tk.Frame(frame)
+    card.grid(row=row, column=0, sticky="ew")
+    card.columnconfigure(0, weight=1)
+    card_row = 0
+
+    name_line = _line(card, card_row, pady=(0, _LINE_PAD))
     tk.Label(name_line, text=name_text, wraplength=_WRAP, justify=tk.LEFT,
              anchor=tk.W, font=fonts["bold"]).pack(side=tk.LEFT, fill=tk.X, expand=True)
-    row += 1
+    card_row += 1
 
-    faction_line = _line(frame, row, pady=(0, _LINE_PAD))
+    faction_line = _line(card, card_row, pady=(0, _LINE_PAD))
     tk.Label(faction_line, text=mission.source_faction, wraplength=_WRAP,
              justify=tk.LEFT, font=fonts["small"]).pack(side=tk.LEFT)
-    row += 1
+    card_row += 1
 
     if mission.commodity:
         methods_text = mining_methods.format_methods(mining_methods.methods_for(mission.commodity))
-        mining_line = _line(frame, row, pady=(0, _LINE_PAD))
+        mining_line = _line(card, card_row, pady=(0, _LINE_PAD))
         tk.Label(mining_line, text=f"Mine via: {methods_text}", wraplength=_WRAP,
                  justify=tk.LEFT, font=fonts["small"]).pack(side=tk.LEFT)
-        row += 1
+        card_row += 1
 
-    status_line = _line(frame, row, pady=(0, _LINE_PAD))
+    status_line = _line(card, card_row, pady=(0, _LINE_PAD))
     tk.Label(status_line, text=status_text, font=fonts["small"]).pack(side=tk.LEFT)
     tk.Label(status_line, text=reward_text).pack(side=tk.RIGHT, anchor="ne")
-    row += 1
+    card_row += 1
 
     location = _mission_location(mission, cmdr, is_complete)
-    dest_line = _line(frame, row, pady=(0, _LINE_PAD))
+    dest_line = _line(card, card_row, pady=(0, _LINE_PAD))
     tk.Label(dest_line, text="→ " + location, wraplength=_WRAP,
              justify=tk.LEFT, font=fonts["small"]).pack(side=tk.LEFT)
-    row += 1
+    card_row += 1
 
     expiry_text, urgent = _format_expiry(mission.expiry)
     if urgent:
         expiry_text = "⚠ " + expiry_text
-    expiry_line = _line(frame, row)
+    expiry_line = _line(card, card_row)
     tk.Label(expiry_line, text="Expires: " + expiry_text, font=fonts["small"]).pack(side=tk.LEFT)
+
+    _bind_mission_click(card, mission.id, on_click)
+    return row + 1
+
+
+def _aggregate_commodities_needed(
+        missions: dict[int, mission_state.Mission]) -> list[tuple[str, int, int]]:
+    """(commodity, total units still needed, mission count), summed across
+    missions where the commodity must still be sourced (mined or bought/
+    collected - see mission_types.needs_commodity_supply), sorted by name.
+    A plain Delivery mission's cargo was already handed over at acceptance,
+    so it never contributes here."""
+    totals: dict[str, list[int]] = {}
+    for mission in missions.values():
+        if not mission.needed_commodity:
+            continue
+        entry = totals.setdefault(mission.needed_commodity, [0, 0])
+        entry[0] += mission.needed_commodity_count
+        entry[1] += 1
+    return sorted((name, count, mission_count) for name, (count, mission_count) in totals.items())
+
+
+def _display_commodities_needed(frame: tk.Frame, rows: list[tuple[str, int, int]],
+                                row: int) -> int:
+    """A shopping-list summary at the top of the Trade & Mining page, so a
+    commander doesn't have to open every Collect/Mining mission card to
+    tally up what's still needed. No-op (returns row unchanged) when
+    there's nothing to source."""
+    if not rows:
+        return row
+    fonts = _get_fonts()
+    header = _line(frame, row, pady=(0, _LINE_PAD))
+    tk.Label(header, text="Commodities needed:", font=fonts["bold"]).pack(side=tk.LEFT)
     row += 1
 
-    return row
+    for name, count, mission_count in rows:
+        line = _line(frame, row, pady=(0, _LINE_PAD))
+        unit = "mission" if mission_count == 1 else "missions"
+        tk.Label(line, text=f"{name} ({mission_count} {unit})", wraplength=_WRAP_NAME,
+                justify=tk.LEFT, anchor=tk.W).pack(side=tk.LEFT, fill=tk.X, expand=True)
+        tk.Label(line, text=f"x{count:,}").pack(side=tk.RIGHT, anchor="ne")
+        row += 1
+
+    return _separator(frame, row, pady=_CARD_GAP)
 
 
 def _display_all_missions(frame: tk.Frame, missions: dict[int, mission_state.Mission],
-                          row: int, no_missions_text: str) -> int:
+                          row: int, no_missions_text: str,
+                          on_click: Callable[[int], None]) -> int:
     if not missions:
         return _display_no_missions(frame, row, no_missions_text)
 
@@ -650,15 +715,18 @@ def _display_all_missions(frame: tk.Frame, missions: dict[int, mission_state.Mis
     for i, mission in enumerate(ordered):
         if i > 0:
             row = _separator(frame, row, pady=_CARD_GAP)
-        row = _display_all_missions_row(frame, mission, row)
+        row = _display_all_missions_row(frame, mission, row, on_click)
     return row
 
 
-def _display_all_missions_table(frame: tk.Frame, missions: list[mission_state.Mission]) -> None:
+def _display_all_missions_table(frame: tk.Frame, missions: list[mission_state.Mission],
+                                on_click: Callable[[int], None]) -> None:
     """A flat, column-based table of every active mission across every
     category, including massacre/settlement ones. Used only in the "All"
     popup: unlike the narrow main panel, a popup is a normal resizable OS
-    window with room for actual columns instead of stacked cards."""
+    window with room for actual columns instead of stacked cards. Each row
+    is clickable, same as a card on the main panel - see
+    ui.UI.__open_mission_detail."""
     fonts = _get_fonts()
 
     def head(text, column, sticky):
@@ -677,19 +745,71 @@ def _display_all_missions_table(frame: tk.Frame, missions: list[mission_state.Mi
 
     for row, mission in enumerate(missions, start=1):
         name_text = f"{mission.name}  ⚠ Illegal" if mission.is_illegal else mission.name
-        tk.Label(frame, text=name_text, justify=tk.LEFT).grid(
-            row=row, column=0, sticky=tk.W, padx=(0, 12), pady=(0, 3))
-        tk.Label(frame, text=mission.source_faction, justify=tk.LEFT).grid(
-            row=row, column=1, sticky=tk.W, padx=(0, 12), pady=(0, 3))
+        name_label = tk.Label(frame, text=name_text, justify=tk.LEFT)
+        name_label.grid(row=row, column=0, sticky=tk.W, padx=(0, 12), pady=(0, 3))
+        faction_label = tk.Label(frame, text=mission.source_faction, justify=tk.LEFT)
+        faction_label.grid(row=row, column=1, sticky=tk.W, padx=(0, 12), pady=(0, 3))
 
         reward_text = _fmt_millions(mission.reward) if mission.reward else "-"
-        tk.Label(frame, text=reward_text).grid(
-            row=row, column=2, sticky=tk.E, padx=(0, 12), pady=(0, 3))
+        reward_label = tk.Label(frame, text=reward_text)
+        reward_label.grid(row=row, column=2, sticky=tk.E, padx=(0, 12), pady=(0, 3))
 
         expiry_text, urgent = _format_expiry(mission.expiry)
         if urgent:
             expiry_text = "⚠ " + expiry_text
-        tk.Label(frame, text=expiry_text).grid(row=row, column=3, sticky=tk.E, pady=(0, 3))
+        expiry_label = tk.Label(frame, text=expiry_text)
+        expiry_label.grid(row=row, column=3, sticky=tk.E, pady=(0, 3))
+
+        for label in (name_label, faction_label, reward_label, expiry_label):
+            _bind_mission_click(label, mission.id, on_click)
+
+
+def _format_full_datetime(iso: str) -> str:
+    """An absolute timestamp rather than _format_expiry's relative
+    countdown - used in the mission detail popup, which has room for one.
+    _parse_expiry is a generic ISO-8601 parser despite its name (shared
+    with _is_expired/_format_expiry); reused here for accepted_at too."""
+    parsed = _parse_expiry(iso)
+    return parsed.strftime("%Y-%m-%d %H:%M UTC") if parsed else "-"
+
+
+def _display_mission_detail(frame: tk.Frame, mission: mission_state.Mission,
+                            cmdr: Optional[str]) -> None:
+    """One mission's full detail as label:value rows, opened by clicking its
+    card/row anywhere else in the panel (see ui.UI.__open_mission_detail).
+    A popup isn't fighting the main panel's narrow width, so this can afford
+    fields the compact card never shows - exact reward, Wing status, the
+    accepted date - on top of everything already there."""
+    fonts = _get_fonts()
+    is_complete, status_text = _mission_status(mission.id, cmdr)
+    location = _mission_location(mission, cmdr, is_complete)
+
+    row = 0
+    name_text = f"{mission.name}  ⚠ Illegal" if mission.is_illegal else mission.name
+    tk.Label(frame, text=name_text, font=fonts["bold"], wraplength=380,
+             justify=tk.LEFT).grid(row=row, column=0, columnspan=2, sticky=tk.W, pady=(0, 8))
+    row += 1
+
+    def detail_row(label: str, value: str) -> None:
+        nonlocal row
+        tk.Label(frame, text=label, font=fonts["bold"]).grid(
+            row=row, column=0, sticky=tk.NW, padx=(0, 12), pady=(0, 4))
+        tk.Label(frame, text=value, wraplength=280, justify=tk.LEFT).grid(
+            row=row, column=1, sticky=tk.W, pady=(0, 4))
+        row += 1
+
+    detail_row("Faction:", mission.source_faction)
+    detail_row("Category:", mission_types.CATEGORY_LABELS.get(mission.category, mission.category))
+    detail_row("Status:", status_text)
+    if mission.commodity:
+        methods_text = mining_methods.format_methods(mining_methods.methods_for(mission.commodity))
+        detail_row("Commodity:", mission.commodity)
+        detail_row("Mine via:", methods_text)
+    detail_row("Reward:", f"{mission.reward:,} CR" if mission.reward else "-")
+    detail_row("Wing mission:", "Yes" if mission.is_wing else "No")
+    detail_row("Destination:", location)
+    detail_row("Accepted:", _format_full_datetime(mission.accepted_at))
+    detail_row("Expires:", _format_full_datetime(mission.expiry))
 
 
 def _display_community_goal_card(frame: tk.Frame, goal: CommunityGoal, row: int) -> int:
@@ -767,6 +887,9 @@ class UI:
         self.__scrollbar: Optional[tk.Scrollbar] = None
         self.__popup: Optional[tk.Toplevel] = None
         self.__popup_content: Optional[tk.Frame] = None
+        self.__detail_popup: Optional[tk.Toplevel] = None
+        self.__detail_content: Optional[tk.Frame] = None
+        self.__detail_mission_id: Optional[int] = None
         self.__version_state: tuple[str, Optional[str]] = ("normal", None)
         self.__version_clear_scheduled = False
         self.__settings = DisplaySettings(edmmm.settings.configuration)
@@ -994,7 +1117,11 @@ class UI:
 
         missions = {mid: m for mid, m in (self.__all_missions_data or {}).items()
                    if m.category == category}
-        return _display_all_missions(frame, missions, row, no_missions_text)
+        if category == mission_types.TRADE and self.__settings.commodities_needed:
+            row = _display_commodities_needed(
+                frame, _aggregate_commodities_needed(missions), row)
+        return _display_all_missions(frame, missions, row, no_missions_text,
+                                     self.__open_mission_detail)
 
     def update_ui(self):
         if self.__frame is None or self.__content is None:
@@ -1039,6 +1166,7 @@ class UI:
         self.__sync_scroll_region()
         self.__canvas.yview_moveto(0)
         self.__refresh_popup()
+        self.__refresh_detail_popup()
 
     def __show_all_missions_popup(self):
         """Opens (or, if already open, raises and refreshes) a popup listing
@@ -1103,7 +1231,7 @@ class UI:
 
         missions = sorted((self.__all_missions_data or {}).values(),
                           key=lambda m: (m.expiry == "", m.expiry))
-        _display_all_missions_table(self.__popup_content, missions)
+        _display_all_missions_table(self.__popup_content, missions, self.__open_mission_detail)
 
         # theme.update() itself rejects a Toplevel outright ("Expected
         # widget, got <class 'tkinter.Toplevel'>") - it's built for the
@@ -1114,6 +1242,72 @@ class UI:
         _apply_theme(self.__popup_content)
         if self.__frame is not None:
             self.__popup.configure(background=self.__frame.cget("background"))
+
+    def __open_mission_detail(self, mission_id: int):
+        """Opens (or, if already open, raises and re-targets) a per-mission
+        detail window - the click target for every mission card/row in the
+        panel and the "All missions" popup. Follows the same Toplevel
+        pattern as that popup (see TECHNICAL_SPEC.md's "Gotcha for any
+        future Toplevel" note): parented to the real EDMC root window, and
+        refreshed from update_ui() rather than registered as its own
+        listener, so it stays live and tolerates the mission it was opened
+        for having since disappeared (handed in, abandoned, expired)."""
+        self.__detail_mission_id = mission_id
+        if self.__detail_popup is not None and self.__detail_popup.winfo_exists():
+            self.__detail_popup.lift()
+            self.__detail_popup.focus_force()
+            self.__refresh_detail_popup()
+            return
+
+        self.__detail_popup = tk.Toplevel(self.__frame.winfo_toplevel())
+        self.__detail_popup.title("EDMMM - Mission Details")
+        self.__detail_popup.columnconfigure(0, weight=1)
+        self.__detail_popup.rowconfigure(0, weight=1)
+        self.__detail_popup.protocol("WM_DELETE_WINDOW", self.__close_detail_popup)
+
+        self.__detail_content = tk.Frame(self.__detail_popup)
+        self.__detail_content.grid(row=0, column=0, sticky="nsew", padx=8, pady=8)
+
+        self.__refresh_detail_popup()
+
+        self.__detail_popup.update_idletasks()
+        width = min(max(self.__detail_content.winfo_reqwidth() + 20, 320), 600)
+        height = min(max(self.__detail_content.winfo_reqheight() + 20, 150), 500)
+
+        master = self.__frame.winfo_toplevel()
+        x = master.winfo_rootx() + (master.winfo_width() - width) // 2
+        y = master.winfo_rooty() + (master.winfo_height() - height) // 2
+        self.__detail_popup.geometry(f"{width}x{height}+{x}+{y}")
+
+    def __close_detail_popup(self):
+        if self.__detail_popup is not None:
+            self.__detail_popup.destroy()
+        self.__detail_popup = None
+        self.__detail_content = None
+        self.__detail_mission_id = None
+
+    def __refresh_detail_popup(self):
+        """Rebuilds the detail popup's content if it's currently open, so it
+        stays live while the panel keeps updating (new kills, redirect,
+        expiry). Degrades to a "no longer active" message, rather than
+        erroring out, if the mission it was opened for has since been
+        handed in, abandoned, or expired."""
+        if self.__detail_popup is None or not self.__detail_popup.winfo_exists():
+            return
+        for child in self.__detail_content.winfo_children():
+            child.destroy()
+
+        mission = (self.__all_missions_data or {}).get(self.__detail_mission_id)
+        if mission is None:
+            tk.Label(self.__detail_content,
+                    text="This mission is no longer active.").grid(row=0, column=0, sticky=tk.W)
+        else:
+            self.__detail_popup.title(f"EDMMM - {mission.name}")
+            _display_mission_detail(self.__detail_content, mission, kill_tracker.current_cmdr)
+
+        _apply_theme(self.__detail_content)
+        if self.__frame is not None:
+            self.__detail_popup.configure(background=self.__frame.cget("background"))
 
 
 ui = UI()

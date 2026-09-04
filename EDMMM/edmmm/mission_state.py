@@ -37,6 +37,15 @@ class Mission:
     missions (Collect, Delivery) also carry a Commodity field but don't
     require mining it yourself, so it's deliberately left blank for those
     rather than showing a misleading mining-method hint."""
+    needed_commodity: str
+    """Commodity display name for missions where it must still be sourced -
+    mined or bought/collected (see mission_types.needs_commodity_supply) -
+    empty otherwise, including plain Delivery (cargo already in hand from
+    acceptance). Independent of `commodity` above: a Collect mission gets
+    this field but not `commodity`, since collecting isn't mining. Backs the
+    Trade & Mining page's "Commodities needed" summary in ui.py."""
+    needed_commodity_count: int
+    """Units still needed of `needed_commodity`; 0 when that's empty."""
 
 
 def __display_name(event: dict) -> str:
@@ -64,6 +73,10 @@ def __build_from_event(event: dict) -> Mission:
         is_illegal=mission_types.is_illegal(event),
         commodity=event.get("Commodity_Localised", "")
         if mission_types.is_mining_mission(event) else "",
+        needed_commodity=event.get("Commodity_Localised", "")
+        if mission_types.needs_commodity_supply(event) else "",
+        needed_commodity_count=event.get("Count", 0)
+        if mission_types.needs_commodity_supply(event) else 0,
     )
 
 

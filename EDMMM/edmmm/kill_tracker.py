@@ -11,6 +11,11 @@ which specific missions are currently active:
   plain membership in `_redirected` as the "Pending"/"Complete" status shown
   on the All Missions pages, and NewDestinationStation/System (when present)
   as the drop-off location to show once complete.
+- The periodic "Missions" event's Complete[] array is a second completion
+  signal for the same concept, folded into the same `_redirected` set (see
+  mark_complete): a mission can be done-but-not-yet-redirected (e.g. right
+  after a relog, before the game re-sends MissionRedirected), and this
+  event tells us that authoritatively without waiting for the redirect.
 """
 from typing import Callable, Optional
 
@@ -86,6 +91,18 @@ def add_redirect(cmdr: str, entry: dict):
             "station": new_station or "",
             "system": new_system or "",
         }
+    __emit_changed()
+
+
+def mark_complete(cmdr: str, mission_ids: set[int]):
+    """Folds mission IDs from the "Missions" event's Complete[] array into
+    the same completion set MissionRedirected feeds - see the module
+    docstring. No destination info to store here (that event carries none),
+    so `_redirect_destinations` is untouched."""
+    if not cmdr or not mission_ids:
+        return
+    logger.info(f"Mission(s) {sorted(mission_ids)} reported complete by the Missions event")
+    _redirected.setdefault(cmdr, set()).update(mission_ids)
     __emit_changed()
 
 

@@ -109,6 +109,13 @@ def journal_entry(cmdr: str, _is_beta: bool, _system: str,
         # Sent at login: authoritative list of currently active mission IDs.
         active_mission_uuids = [int(m["MissionID"]) for m in entry.get("Active", [])]
         mission_repository_module.set_active_uuids(active_mission_uuids, cmdr)
+        # Also authoritative for which of those are already objective-complete
+        # (e.g. right after a relog, before a fresh MissionRedirected fires) -
+        # set_active_uuids must run first so the repository knows about these
+        # mission IDs before kill_tracker's own listeners re-derive status/
+        # progress from them.
+        complete_mission_uuids = {int(m["MissionID"]) for m in entry.get("Complete", [])}
+        kill_tracker.mark_complete(cmdr, complete_mission_uuids)
 
     elif event == "MissionAccepted":
         if repo is not None:
