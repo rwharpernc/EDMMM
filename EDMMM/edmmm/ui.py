@@ -157,6 +157,26 @@ height. Below the cap the panel still just sizes to its content, same as
 before - the scrollbar only appears once it's actually needed."""
 
 
+_content_bg = ""
+"""Background color applied to every dynamically-built row/card Frame (see
+_line() and the mission-card wrapper in _display_all_missions_row).
+EDMC's theme.update() only colors LEAF widgets (Labels, etc.) among a
+frame's direct children - it never sets a Frame's own background. A
+freshly-built Frame therefore keeps Tk's plain default (white), which is
+invisible only where its content happens to fill it completely (e.g. a
+Label packed with fill=X, expand=True, as a card's title line is) - any
+Label that isn't (the common case for the rest of a card's lines) leaves
+the frame's true white background exposed around it. Recomputed once at
+the top of every update_ui() from self.__frame's own background, the same
+already-correctly-themed source _apply_theme/canvas/content already read
+elsewhere."""
+
+
+def _set_content_bg(bg: str) -> None:
+    global _content_bg
+    _content_bg = bg
+
+
 def _recompute_wrap_widths(available_width: int) -> None:
     """Derives _WRAP/_WRAP_NAME from the panel's real current width instead
     of a fixed guess, since EDMC panel width isn't a constant across
@@ -310,7 +330,7 @@ def _line(frame: tk.Frame, row: int, pady: int = 0) -> tk.Frame:
     sits left-anchored and wraps if it's a wraplength'd Label; content packed
     with side=RIGHT sits pinned to the right edge - the two never fight over
     column widths the way grid columns do on a narrow panel."""
-    line = tk.Frame(frame)
+    line = tk.Frame(frame, background=_content_bg)
     line.grid(row=row, column=0, sticky="ew", pady=pady)
     return line
 
@@ -608,7 +628,7 @@ def _display_all_missions_row(frame: tk.Frame, mission: mission_state.Mission,
     name_text = f"{mission.name}  ⚠ Illegal" if mission.is_illegal else mission.name
     reward_text = _fmt_millions(mission.reward) if mission.reward else "-"
 
-    card = tk.Frame(frame)
+    card = tk.Frame(frame, background=_content_bg)
     card.grid(row=row, column=0, sticky="ew")
     card.columnconfigure(0, weight=1)
     card_row = 0
@@ -1157,6 +1177,7 @@ class UI:
         canvas_width = self.__canvas.winfo_width()
         if canvas_width > 1:  # not yet realized (e.g. very first call) - keep the fallback
             _recompute_wrap_widths(canvas_width)
+        _set_content_bg(self.__frame.cget("background"))
 
         for child in self.__content.winfo_children():
             child.destroy()
@@ -1185,9 +1206,8 @@ class UI:
         theme.update(self.__frame)
         _apply_theme(self.__header)
         _apply_theme(self.__content)
-        bg = self.__frame.cget("background")
-        self.__canvas.configure(background=bg)
-        self.__content.configure(background=bg)
+        self.__canvas.configure(background=_content_bg)
+        self.__content.configure(background=_content_bg)
         self.__sync_scroll_region()
         self.__canvas.yview_moveto(0)
         self.__refresh_popup()
