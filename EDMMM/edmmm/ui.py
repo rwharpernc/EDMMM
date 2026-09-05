@@ -37,7 +37,6 @@ from theme import theme
 from ttkHyperlinkLabel import HyperlinkLabel
 
 import edmmm.community_goal_state as community_goal_state
-import edmmm.game_mode as game_mode
 import edmmm.mining_methods as mining_methods
 import edmmm.mission_state as mission_state
 import edmmm.mission_types as mission_types
@@ -49,6 +48,8 @@ from edmmm.logger_factory import logger
 from edmmm.massacre_state import (MassacreMission, compute_progress,
                                         massacre_mission_listeners)
 from edmmm.settings import Configuration
+
+PLUGIN_DISPLAY_NAME = "My Mission Manager (EDMMM)"
 
 MISSION_CAP = 20
 REFRESH_INTERVAL_MS = 60_000
@@ -254,7 +255,6 @@ class DisplaySettings:
         self.sum = config.display_sum_row
         self.mission_count = config.display_mission_count
         self.settlement = config.display_settlement
-        self.game_mode = config.display_game_mode
         self.commodities_needed = config.display_commodities_needed
 
 
@@ -453,12 +453,9 @@ def _display_update_status(frame: tk.Frame, state: tuple[str, Optional[str]], ro
     return row + 1
 
 
-def _display_cmdr_header(frame: tk.Frame, cmdr: Optional[str], count: Optional[int],
+def _display_cmdr_header(frame: tk.Frame, count: Optional[int],
                           settings: DisplaySettings, row: int) -> int:
-    """Header: mission count on one line ("Missions: 3/20"), game mode on
-    its own line below ("You are in: Open mode.") - independent lines since
-    either can be toggled off on its own."""
-    show_mode = settings.game_mode and cmdr
+    """Header: mission count on one line ("Missions: 3/20")."""
     show_count = settings.mission_count and count is not None
 
     if show_count:
@@ -467,15 +464,6 @@ def _display_cmdr_header(frame: tk.Frame, cmdr: Optional[str], count: Optional[i
                  font=_get_fonts()["bold"], anchor=tk.W).pack(
             side=tk.LEFT, fill=tk.X, expand=True)
         row += 1
-
-    if show_mode:
-        mode_label = game_mode.label_for(cmdr)
-        if mode_label:
-            mode_line = _line(frame, row)
-            tk.Label(mode_line, text=f"You are in: {mode_label} mode.",
-                     font=_get_fonts()["small"], anchor=tk.W).pack(
-                side=tk.LEFT, fill=tk.X, expand=True)
-            row += 1
 
     return row
 
@@ -881,6 +869,9 @@ class UI:
         self.__all_missions_data: Optional[dict[int, mission_state.Mission]] = None
         self.__community_goals: dict[int, CommunityGoal] = community_goal_state.get_goals(
             community_goal_state.current_cmdr)
+        self.__header: Optional[tk.Frame] = None
+        self.__header_label: Optional[tk.Label] = None
+        self.__collapsed = edmmm.settings.configuration.panel_collapsed
         self.__canvas: Optional[tk.Canvas] = None
         self.__content: Optional[tk.Frame] = None
         self.__content_window: Optional[int] = None
@@ -906,9 +897,10 @@ class UI:
     def set_frame(self, frame: tk.Frame):
         """Builds the outer frame EDMC embeds (unchanged identity/role, so
         whatever mechanism delivers EDMC's <<Refresh>> event to it keeps
-        working) plus a Canvas/Scrollbar/content-frame trio nested inside it.
-        Only the content frame is torn down and rebuilt on every update_ui();
-        the scroll machinery persists across refreshes."""
+        working) plus a header row and a Canvas/Scrollbar/content-frame trio
+        nested inside it. Only the content frame is torn down and rebuilt on
+        every update_ui(); the header and scroll machinery persist across
+        refreshes."""
         cspan = frame.grid_size()[1]
         if cspan < 1:
             cspan = 2
@@ -916,12 +908,20 @@ class UI:
         self.__frame.grid(column=0, columnspan=cspan, sticky="ew")
         self.__frame.columnconfigure(0, weight=1)
 
+        self.__header = tk.Frame(self.__frame)
+        self.__header.grid(column=0, row=0, columnspan=2, sticky="ew")
+        self.__header_label = tk.Label(
+            self.__header, font=_get_fonts()["bold"], anchor=tk.W, cursor="hand2")
+        self.__header_label.pack(side=tk.LEFT, fill=tk.X, expand=True)
+        self.__header_label.bind("<Button-1>", lambda _e: self.__toggle_collapsed())
+        self.__update_header_text()
+
         self.__canvas = tk.Canvas(self.__frame, highlightthickness=0, borderwidth=0,
                                   yscrollincrement=24)
-        self.__canvas.grid(column=0, row=0, sticky="ew")
+        self.__canvas.grid(column=0, row=1, sticky="ew")
         self.__scrollbar = tk.Scrollbar(self.__frame, orient="vertical",
                                         command=self.__canvas.yview)
-        self.__scrollbar.grid(column=1, row=0, sticky="ns")
+        self.__scrollbar.grid(column=1, row=1, sticky="ns")
         self.__canvas.configure(yscrollcommand=self.__scrollbar.set)
 
         self.__content = tk.Frame(self.__canvas)
@@ -936,6 +936,7 @@ class UI:
 
         self.__frame.bind("<<Refresh>>", lambda _: self.update_ui())
         self.update_ui()
+        self.__apply_collapsed_state()
         # This first update_ui() call almost always lands before Tk has
         # given the canvas real geometry (winfo_width() still 1), so wrap
         # widths fall back to the static defaults - re-run once shortly
@@ -956,6 +957,30 @@ class UI:
         self.__refresh_if_alive()
         if self.__frame is not None and self.__frame.winfo_exists():
             self.__frame.after(REFRESH_INTERVAL_MS, self.__tick)
+
+    def __update_header_text(self):
+        arrow = "▸" if self.__collapsed else "▾"
+        self.__header_label.configure(text=f"{arrow} {PLUGIN_DISPLAY_NAME}")
+
+    def __toggle_collapsed(self):
+        self.__collapsed = not self.__collapsed
+        edmmm.settings.configuration.panel_collapsed = self.__collapsed
+        self.__update_header_text()
+        self.__apply_collapsed_state()
+
+    def __apply_collapsed_state(self):
+        """Hides everything below the header (the scrolling content) while
+        collapsed, without tearing any of it down - expanding just re-grids
+        the same live canvas/scrollbar and re-derives the scrollbar's
+        visibility from current content height."""
+        if self.__canvas is None:
+            return
+        if self.__collapsed:
+            self.__canvas.grid_remove()
+            self.__scrollbar.grid_remove()
+        else:
+            self.__canvas.grid()
+            self.__sync_scroll_region()
 
     def __on_canvas_resize(self, event):
         """Keeps the content frame's width matched to the canvas (which
@@ -979,7 +1004,7 @@ class UI:
         mid-scroll. update_ui() resets to the top itself, once, right after
         it actually rebuilds the page.
         """
-        if self.__canvas is None:
+        if self.__canvas is None or self.__collapsed:
             return
         self.__canvas.update_idletasks()
         bbox = self.__canvas.bbox("all")
@@ -1146,8 +1171,7 @@ class UI:
         else:
             counts = self.__category_counts()
             total = len(self.__all_missions_data)
-            row = _display_cmdr_header(self.__content, kill_tracker.current_cmdr,
-                                        total, self.__settings, row)
+            row = _display_cmdr_header(self.__content, total, self.__settings, row)
             if sum(counts.values()) == 0:
                 _display_no_missions(self.__content, row, random.choice(_NO_MISSIONS_MESSAGES))
             else:
@@ -1159,6 +1183,7 @@ class UI:
                 self.__render_current_page(self.__content, row)
 
         theme.update(self.__frame)
+        _apply_theme(self.__header)
         _apply_theme(self.__content)
         bg = self.__frame.cget("background")
         self.__canvas.configure(background=bg)

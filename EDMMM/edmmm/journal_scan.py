@@ -5,7 +5,6 @@ Collects, per CMDR:
 - MissionAccepted events (all missions; filtering happens later)
 - Bounty events (used to estimate kill progress)
 - MissionRedirected mission IDs (authoritative "objective complete" signal)
-- LoadGame events (game mode: Solo / Open / Private Group)
 - CommunityGoal events (Community Goal progress and contribution)
 """
 import datetime as dt
@@ -39,15 +38,11 @@ class ScanResult:
     """CMDR -> (Mission ID -> {"station": ..., "system": ...}), the
     redirect's new turn-in location - only present when the event carried
     NewDestinationStation/NewDestinationSystem."""
-    mode_by_cmdr: dict[str, str] = field(default_factory=dict)
-    """CMDR -> game mode from their most recent LoadGame event"""
-    group_by_cmdr: dict[str, str] = field(default_factory=dict)
-    """CMDR -> private group name, only set when mode is "Group\""""
     community_goals_by_cmdr: dict[str, dict[int, dict]] = field(default_factory=dict)
     """CMDR -> (CGID -> latest CurrentGoals sub-entry seen for that CGID)"""
 
 
-_RELEVANT_EVENTS = ("Commander", "MissionAccepted", "Bounty", "MissionRedirected", "LoadGame",
+_RELEVANT_EVENTS = ("Commander", "MissionAccepted", "Bounty", "MissionRedirected",
                     "CommunityGoal")
 
 
@@ -97,20 +92,6 @@ def __scan_one_log(file_path: Path, result: ScanResult):
                                 "station": new_station or "",
                                 "system": new_system or "",
                             }
-                    elif event == "LoadGame":
-                        # Mirrors EDMC's own CQC detection: no Ship and no
-                        # GameMode (or GameMode == "CQC") means CQC.
-                        mode = line_as_json.get("GameMode")
-                        if (not line_as_json.get("Ship") and not mode) \
-                                or (mode or "").lower() == "cqc":
-                            mode = "CQC"
-                        if mode:
-                            result.mode_by_cmdr[cmdr] = mode
-                        group = line_as_json.get("Group")
-                        if group:
-                            result.group_by_cmdr[cmdr] = group
-                        else:
-                            result.group_by_cmdr.pop(cmdr, None)
                     elif event == "CommunityGoal":
                         goals = result.community_goals_by_cmdr.setdefault(cmdr, {})
                         for goal_entry in line_as_json.get("CurrentGoals", []):

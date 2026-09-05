@@ -68,15 +68,6 @@ class Configuration:
 
     #######################################
     @property
-    def display_game_mode(self):
-        return config.get_bool(f"{self.plugin_name}.display_game_mode", default=True)
-
-    @display_game_mode.setter
-    def display_game_mode(self, value: bool):
-        config.set(f"{self.plugin_name}.display_game_mode", value)
-
-    #######################################
-    @property
     def display_commodities_needed(self):
         return config.get_bool(f"{self.plugin_name}.display_commodities_needed", default=True)
 
@@ -92,6 +83,18 @@ class Configuration:
     @auto_update.setter
     def auto_update(self, value: bool):
         config.set(f"{self.plugin_name}.auto_update", value)
+
+    #######################################
+    @property
+    def panel_collapsed(self) -> bool:
+        """Whether the main panel is collapsed to just its header. Toggled
+        by clicking the header itself (not a Settings-tab checkbox), but
+        persisted the same way so it survives EDMC restarts."""
+        return config.get_bool(f"{self.plugin_name}.panel_collapsed", default=False)
+
+    @panel_collapsed.setter
+    def panel_collapsed(self, value: bool):
+        config.set(f"{self.plugin_name}.panel_collapsed", value)
 
     #######################################
     @property
@@ -124,8 +127,6 @@ class Configuration:
             self.display_mission_count = data["display_mission_count"].get()
         if "display_settlement" in keys:
             self.display_settlement = data["display_settlement"].get()
-        if "display_game_mode" in keys:
-            self.display_game_mode = data["display_game_mode"].get()
         if "display_commodities_needed" in keys:
             self.display_commodities_needed = data["display_commodities_needed"].get()
         if "auto_update" in keys:
@@ -177,7 +178,6 @@ def __build_settings_ui(root) -> tk.Frame:
     __setting_changes["display_sum_row"] = tk.IntVar(value=configuration.display_sum_row)
     __setting_changes["display_mission_count"] = tk.IntVar(value=configuration.display_mission_count)
     __setting_changes["display_settlement"] = tk.IntVar(value=configuration.display_settlement)
-    __setting_changes["display_game_mode"] = tk.IntVar(value=configuration.display_game_mode)
     __setting_changes["display_commodities_needed"] = tk.IntVar(
         value=configuration.display_commodities_needed)
     __setting_changes["auto_update"] = tk.IntVar(value=configuration.auto_update)
@@ -197,8 +197,6 @@ def __build_settings_ui(root) -> tk.Frame:
                        variable=__setting_changes["display_mission_count"]),
         nb.Checkbutton(frame, text="Display Target Settlement (Ground Missions)",
                        variable=__setting_changes["display_settlement"]),
-        nb.Checkbutton(frame, text="Display Game Mode (Solo/Open/Private)",
-                       variable=__setting_changes["display_game_mode"]),
         nb.Checkbutton(frame, text="Display Commodities Needed (Trade & Mining)",
                        variable=__setting_changes["display_commodities_needed"]),
     ]

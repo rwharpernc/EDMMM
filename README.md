@@ -86,7 +86,7 @@ Several new features are currently under research and design — see
 ### Navigation
 
 - The plugin adds a panel to EDMC showing your missions, plus Community Goal progress, across **8 category pages**. Use the ◂ / ▸ arrows to page between them — empty categories are automatically skipped.
-- **All** — click the "All" link next to the page arrows to open a separate window listing every active mission across every category at once, in a wide table (not limited to EDMC's narrow panel width). It stays live while open.
+- **All** — click the "All" link next to the page arrows to open a separate window listing every active mission across every category at once, in a wide table (not limited to EDMC's narrow panel width). It stays live while open, and clicking any row opens that mission's detail window (see below).
 - **Only active missions are ever shown** — the moment you hand in, abandon, or fail a mission, it drops off the panel. Nothing lingers after it's no longer active.
 - If you have no missions assigned at all, the panel shows a message saying so instead of the page selector.
 - **Remembers your page** — the category you were viewing is restored when you restart EDMC.
@@ -110,13 +110,15 @@ These two pages track the *same* underlying mission type — one with a kill cou
 **Organized by type for quick scanning.**
 
 - **Combat** — assassinations, black ops, piracy and Thargoid-related missions, megaship disables, skimmer clearing, and other non-massacre combat missions.
-- **Trade & Mining** — delivery, courier, collection, mining, and salvage missions. Mining missions get an extra **"Mine via: ..."** line naming which extraction method(s) — Core, Laser Surface, Sub-surface Deposit — the target commodity typically comes from (a best-effort community-sourced hint, not a mission field, so a handful of rare minerals list more than one method rather than guess).
+- **Trade & Mining** — delivery, courier, collection, mining, and salvage missions. Mining missions get an extra **"Mine via: ..."** line naming which extraction method(s) — Core, Laser Surface, Sub-surface Deposit — the target commodity typically comes from (a best-effort community-sourced hint, not a mission field, so a handful of rare minerals list more than one method rather than guess). The page also opens with a **"Commodities needed"** summary totaling how much of each commodity your active Collect/Mining missions still require — a plain Delivery mission's cargo is already in hand from acceptance, so it isn't counted.
 - Colonisation missions are deliberately not shown anywhere on the panel.
 - **Passenger** — VIP, bulk, sightseeing, evacuation, and prisoner-transport missions.
 - **Covert / On-Foot Ops** — hacking, sabotage, heists, and other on-foot missions that aren't settlement raids.
 - **Other** — anything that doesn't fit the above (a handful of obscure or new mission types may land here until their naming pattern is recognized).
 
-Each mission shows: giver faction, status (**Pending** or **✓ Complete** — complete once the game confirms the objective is done and redirects you back to turn it in), the location to go to (the redirect's new turn-in location once complete, otherwise the original destination), reward, and time until expiry (soonest-expiring first). Missions the game flags as **illegal** are marked so you know which ones break laws.
+Each mission shows: giver faction, status (**Pending** or **✓ Complete** — complete once the game confirms the objective is done), the location to go to (the new turn-in location once complete, otherwise the original destination), reward, and time until expiry (soonest-expiring first). Missions the game flags as **illegal** are marked so you know which ones break laws.
+
+**Click any mission's card** to open a detail window with everything the compact card has no room for: exact reward, Wing status, and the accepted/expiry dates and times. It stays live while open, and closes on its own if that mission is handed in, abandoned, or expires.
 
 **Wing missions** (Wing Mining, Wing Trading, Wing Massacre, etc.) are tracked and categorized the same as any other mission, but the wing-shareable reward split is currently only displayed on the Massacre & Settlement Raids pages above — pages 3–7 show the full reward with no wing indicator.
 
@@ -128,7 +130,7 @@ Not a mission — Community Goals aren't accepted, they never appear in a `Missi
 
 ### Header & General
 
-- **Header shows total mission count** (x/20 — the game's limit) and current game mode (Solo / Open / Private Group with group name / CQC).
+- **Header shows the plugin's name and total mission count** (x/20 — the game's limit). Click the header to collapse the panel down to just that line — handy if you want the rest of EDMC's window uncluttered for a while. Collapsed state is remembered across restarts.
 - **Per-commander profiles** — each commander's missions, kills, and progress are tracked separately; switching commanders switches the entire view. This is what makes EDMMM alt-friendly.
 - **All mission/kill/Community Goal tracking is offline** — that data only ever comes from your local journal files and nothing about it is sent anywhere. The one exception is auto-update, an opt-in check against GitHub Releases (off by default); see below.
 - **Theme-aware** — the panel respects EDMC's light and dark themes, so it's readable no matter which one you use.
@@ -150,7 +152,7 @@ The plugin's options tab is in EDMC under **File → Settings → EDMMM**. It ha
 - Sum row (per-faction totals on the massacre pages) *(on by default)*
 - Mission count badge *(on by default)*
 - Target settlement list (Ground page) *(on by default)*
-- Game mode *(on by default)*
+- Commodities needed summary (Trade & Mining page) *(on by default)*
 - Automatically download updates *(off by default — see [Auto-update](#auto-update) above)*
 
 The tab also shows the installed plugin version — a clickable link to the Releases page — and the location of its log file.

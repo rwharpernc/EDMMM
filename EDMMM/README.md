@@ -104,7 +104,8 @@ what's being explored.
   window listing every active mission across every category at once, in a
   wide table rather than the main panel's narrow layout. It refreshes live
   while open, and clicking "All" again just raises the existing window
-  instead of opening a duplicate.
+  instead of opening a duplicate. Clicking any row in it opens that
+  mission's detail window (see below).
 - **Only active missions are ever shown** — the moment you hand in,
   abandon, or fail a mission, it drops off the panel.
 - If you have no missions assigned at all, the panel shows a "No missions
@@ -150,7 +151,11 @@ in-game.
   which extraction method(s) - Core, Laser Surface, Sub-surface Deposit -
   the target commodity typically comes from (a best-effort
   community-sourced hint, not a mission field, so a handful of rare
-  minerals list more than one method rather than guess).
+  minerals list more than one method rather than guess). The page also
+  opens with a **"Commodities needed"** summary totaling how much of each
+  commodity your active Collect/Mining missions still require - a plain
+  Delivery mission's cargo is already in hand from acceptance, so it isn't
+  counted.
 - Colonisation missions are deliberately not shown anywhere on the panel.
 - **Passenger** — VIP, bulk, sightseeing, evacuation, and prisoner-transport
   missions.
@@ -159,15 +164,19 @@ in-game.
 - **Other** — everything that doesn't fit the above.
 
 Pages 3–7 are a plain list: mission name, giver faction, status (**Pending**
-or **✓ Complete** once the game confirms the objective is done and
-redirects you back to turn it in), the location to go to (the redirect's
-new turn-in location once complete, otherwise the original destination),
-reward, and time left, soonest-expiring first. Missions flagged **illegal**
-by the game (smuggling, illegal cargo, etc.) are marked wherever they land,
-since illegality cuts across types rather than being its own category.
-Mission-type detection is name-based (the game doesn't expose a clean type
-field), so a handful of obscure or new mission types may land in *Other*
-until their naming pattern is added.
+or **✓ Complete** once the game confirms the objective is done), the
+location to go to (the new turn-in location once complete, otherwise the
+original destination), reward, and time left, soonest-expiring first.
+Missions flagged **illegal** by the game (smuggling, illegal cargo, etc.)
+are marked wherever they land, since illegality cuts across types rather
+than being its own category. Mission-type detection is name-based (the
+game doesn't expose a clean type field), so a handful of obscure or new
+mission types may land in *Other* until their naming pattern is added.
+
+**Click any mission's card** to open a detail window with everything the
+compact card has no room for: exact reward, Wing status, and the
+accepted/expiry dates and times. It stays live while open, and closes on
+its own if that mission is handed in, abandoned, or expires.
 
 **Wing missions** (Wing Mining, Wing Trading, Wing Massacre, etc.) are
 tracked and categorized the same as any other mission, but the
@@ -193,11 +202,12 @@ underlying game system is different.
 
 ### Header & General
 
-The header shows:
+The header shows the plugin's name and, on the line below it, the total
+active mission count (x/20 — the game's own mission cap). Click the header
+to collapse the panel down to just that line — handy if you want the rest
+of EDMC's window uncluttered for a while; collapsed state is remembered
+across restarts.
 
-- Total active mission count (x/20 — the game's own mission cap).
-- Your current **game mode** (Solo / Open / Private Group with the group's
-  name / CQC).
 - **Per-commander profiles**: every mission, kill, and progress figure is
   tracked separately per CMDR. Switching commanders switches the whole view;
   one commander's missions can never bleed into another's. This is what
@@ -233,7 +243,11 @@ EDMC; nothing is touched while EDMC is running.
 ## How kill progress is estimated (Massacre / Settlement Raids pages)
 
 - A `MissionRedirected` journal event marks a mission's objective as complete
-  (this is authoritative — the game sends it when you have all required kills).
+  (this is authoritative — the game sends it when you have all required
+  kills). The game's periodic mission-status update is a second,
+  earlier-or-equal signal for the same thing, so a mission that's actually
+  done but hasn't (yet, or ever) triggered its own redirect - e.g. right
+  after a relog - still shows Complete.
 - For unfinished missions, `Bounty` events are counted: a kill of the target
   faction counts toward the earliest unfinished mission of **each** distinct
   mission-giver faction (this mirrors how massacre stacking works in-game).
@@ -255,7 +269,7 @@ has a checkbox for each of these:
 - Sum row (per-faction totals on the massacre pages) *(on by default)*
 - Mission count badge *(on by default)*
 - Target settlement list (Ground page) *(on by default)*
-- Game mode *(on by default)*
+- Commodities needed summary (Trade & Mining page) *(on by default)*
 - Automatically download updates *(off by default - see
   [Auto-update](#auto-update) above)*
 

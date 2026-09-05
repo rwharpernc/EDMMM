@@ -53,8 +53,8 @@ functions by name; it's not EDMMM that decides when they run:
 
 - **`plugin_start3(plugin_dir) -> str`** — called once when EDMC starts.
   Kicks off the two-week journal backfill
-  (`journal_scan.scan_journals`) and seeds `mission_repository`,
-  `kill_tracker`, and `game_mode` with the result. Wrapped in a broad
+  (`journal_scan.scan_journals`) and seeds `mission_repository` and
+  `kill_tracker` with the result. Wrapped in a broad
   `try/except`: a scan failure logs and starts from empty state rather than
   blocking the plugin (and its settings tab) from loading at all. Also
   where `update.check_applied_update()` runs and `update.UpdateManager`'s
@@ -65,7 +65,7 @@ functions by name; it's not EDMMM that decides when they run:
   for *every* journal event, live, for the rest of the session. This is the
   plugin's main nervous system: it dispatches `Missions`, `MissionAccepted`,
   `MissionAbandoned`/`MissionCompleted`/`MissionFailed`, `MissionRedirected`,
-  `Bounty`, `CommunityGoal`, and `LoadGame` to the relevant module. Everything
+  `Bounty`, and `CommunityGoal` to the relevant module. Everything
   else is ignored - the `system`/`station` parameters EDMC passes in are
   currently unused (they backed the now-removed colonisation-depot tracking,
   the only events that needed EDMC's own current-docked location).
@@ -79,7 +79,7 @@ event vocabulary:
 
 1. **`journal_scan.scan_journals()`** — a one-time synchronous scan of the
    last two weeks of `*.log` files at startup. Filters to
-   `Commander`/`MissionAccepted`/`Bounty`/`MissionRedirected`/`LoadGame`
+   `Commander`/`MissionAccepted`/`Bounty`/`MissionRedirected`/`CommunityGoal`
    lines only (`_RELEVANT_EVENTS`) and returns a `ScanResult`.
 2. **`load.journal_entry()`** — the same event types, live, one journal line
    at a time, for as long as EDMC keeps running.
@@ -99,8 +99,8 @@ currently playing":
 - Every mutation re-emits through `active_missions_changed_event_listeners`
   — a plain list of callback functions appended to at import time, not a
   framework event bus. This same pattern (a module-level list of listeners)
-  repeats in `mission_state`, `massacre_state`, `kill_tracker`, `game_mode`,
-  and `settings`.
+  repeats in `mission_state`, `massacre_state`, `kill_tracker`, and
+  `settings`.
 
 Two independent listeners subscribe to the repository and build their own
 specialized view of it:
@@ -109,7 +109,12 @@ specialized view of it:
   colonisation ones (`mission_types.is_colonisation_mission()` - excluded
   entirely per user preference, not just recategorized), tagged with
   `mission_types.classify()`'s category and `mission_types.is_illegal()`.
-  This backs the "All Missions" pages (3–7).
+  This backs the "All Missions" pages (3–7). It also tags
+  `needed_commodity`/`needed_commodity_count` for missions where the
+  commodity must still be sourced (`mission_types.needs_commodity_supply()` -
+  mining or collecting, not plain Delivery, whose cargo is already in hand
+  at acceptance) - `ui.py` aggregates these into the Trade & Mining page's
+  "Commodities needed" summary.
 - **`massacre_state.py`** filters down to `mission_types.is_massacre_shaped()`
   missions only (a kill count against a target faction) and builds a
   `MassacreMission` per one. This backs the two detailed kill-stacking
@@ -117,6 +122,11 @@ specialized view of it:
 
 **`kill_tracker.py`** separately accumulates `Bounty` and `MissionRedirected`
 evidence per CMDR, independent of which specific missions exist right now.
+A mission ID can also land in the same "complete" set via
+`kill_tracker.mark_complete()`, fed by the periodic `Missions` event's
+`Complete[]` array (`load.py`) - a second, earlier-or-equal signal for the
+same concept, for a mission that's objective-complete but hasn't (yet, or
+ever) fired its own `MissionRedirected`, e.g. right after a relog.
 `massacre_state.compute_progress()` is what ties the two together — kill
 progress isn't stored, it's recomputed from current mission + kill state
 every time it's needed. `ui.py` does the same thing directly for Pages
@@ -125,9 +135,6 @@ every time it's needed. `ui.py` does the same thing directly for Pages
 `mission_state.py` subscribes to `kill_tracker.kill_data_changed_listeners`
 purely to re-emit and trigger a redraw, the same way `massacre_state.py`
 does.
-
-**`game_mode.py`** is a third, independent per-CMDR store, fed only by
-`LoadGame` events, for the header's mode label.
 
 **`community_goal_state.py`** is a third independent per-CMDR store,
 backing the Community Goals page. It isn't downstream of
@@ -189,8 +196,7 @@ flowchart LR
     JF -.live tail.-> LE["load.py<br/>(journal_entry)"]
     JS --> MR["mission_repository.py<br/>(per-CMDR active set)"]
     LE --> MR
-    LE --> KT["kill_tracker.py<br/>(bounties + redirects)"]
-    LE --> GM["game_mode.py"]
+    LE --> KT["kill_tracker.py<br/>(bounties + completion signals)"]
     LE --> CG["community_goal_state.py<br/>(goals, by CGID)"]
     MR --> MS["mission_state.py<br/>(All Missions view)"]
     MR --> MC["massacre_state.py<br/>(kill-stacking view)"]
@@ -198,7 +204,6 @@ flowchart LR
     KT -."status + drop-off,<br/>read live".-> UI["ui.py<br/>(Tkinter panel)"]
     MS --> UI
     MC --> UI
-    GM --> UI
     CG --> UI
     CFG["settings.py /<br/>EDMC config store"] --> UI
 ```
@@ -207,8 +212,7 @@ flowchart LR
 
 Every stateful module keys its store by CMDR name, not by session:
 `mission_repository._mission_store`/`_active_by_cmdr`,
-`kill_tracker._bounties`/`_redirected`,
-`game_mode._mode_by_cmdr`/`_group_by_cmdr`. Switching commanders
+`kill_tracker._bounties`/`_redirected`. Switching commanders
 (`mission_repository.set_current_cmdr`, itself driven by the `cmdr`
 argument EDMC passes into every `journal_entry` call) just swaps which
 CMDR's slice of each dict gets read, then re-emits — nothing is cleared or
@@ -284,10 +288,11 @@ the algorithm exists to close that gap by inference.
    somewhere to land.
 2. **Mission-complete signals are authoritative and short-circuit
    everything.** `MissionRedirected` fires when the game itself decides a
-   mission's kill objective is met. Any mission ID that's been redirected
-   is marked done (`progress[id] = mission.count`) immediately and
-   excluded from bounty matching entirely — no inference happens for it,
-   because none is needed.
+   mission's kill objective is met; the `Missions` event's `Complete[]`
+   array (via `kill_tracker.mark_complete()`) is the same signal arriving
+   a second way. Any mission ID in that combined set is marked done
+   (`progress[id] = mission.count`) immediately and excluded from bounty
+   matching entirely — no inference happens for it, because none is needed.
 3. **Everything else is inferred from `Bounty` events, using the same
    rules the game itself uses for stacking:**
    - Open (non-redirected) missions are grouped by mission-giver faction
@@ -394,8 +399,11 @@ directly at render time (`_mission_status()`/`_mission_location()` in
 a mission is "Complete" purely by virtue of its ID being in
 `kill_tracker.get_redirected()`, reusing the exact signal massacre progress
 treats as authoritative — see "Why redirected overrides the estimate"
-above. Nothing new is inferred; this just surfaces a signal the plugin was
-already collecting for every mission type, not only massacre ones.
+above. That set is fed by both `MissionRedirected` and the `Missions`
+event's `Complete[]` array (`kill_tracker.mark_complete()`), so a mission
+that's done-but-not-yet-redirected still shows Complete. Nothing new is
+inferred; this just surfaces a signal the plugin was already collecting
+for every mission type, not only massacre ones.
 
 The drop-off location follows the same live-read pattern:
 `MissionRedirected` events are captured with their

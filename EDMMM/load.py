@@ -20,7 +20,6 @@ from os.path import basename, dirname
 from typing import Any, Optional
 
 import edmmm.community_goal_state as community_goal_state
-import edmmm.game_mode as game_mode
 import edmmm.kill_tracker as kill_tracker
 import edmmm.mission_repository as mission_repository_module
 import edmmm.update as update
@@ -52,13 +51,11 @@ def plugin_start3(plugin_dir: str) -> str:
         kill_tracker.initialize(scan_result.bounties_by_cmdr,
                                 scan_result.redirected_by_cmdr,
                                 scan_result.redirect_destinations_by_cmdr)
-        game_mode.initialize(scan_result.mode_by_cmdr, scan_result.group_by_cmdr)
         community_goal_state.initialize(scan_result.community_goals_by_cmdr)
     except Exception:
         logger.exception("Journal scan failed - starting with empty state")
         mission_repository_module.set_new_repo({})
         kill_tracker.initialize({}, {}, {})
-        game_mode.initialize({}, {})
         community_goal_state.initialize({})
 
     logger.info("Awaiting Missions-Event to build the active mission list")
@@ -139,13 +136,6 @@ def journal_entry(cmdr: str, _is_beta: bool, _system: str,
         # Not scoped to the current station - CurrentGoals can list several
         # Community Goals across different systems at once.
         community_goal_state.update_goals(cmdr, entry)
-
-    elif event == "LoadGame":
-        # Fired once per game session: tells us Solo / Open / Private Group.
-        mode = entry.get("GameMode")
-        if not entry.get("Ship") and not mode or (mode or "").lower() == "cqc":
-            mode = "CQC"
-        game_mode.set_mode(cmdr, mode, entry.get("Group"))
 
 
 def plugin_prefs(parent: Any, _cmdr: str, _is_beta: bool):

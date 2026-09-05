@@ -16,7 +16,6 @@ The plugin's runtime code lives in [`EDMMM/`](EDMMM):
   - `mission_types.py` — classifies missions into categories (see below).
   - `mining_methods.py` — static commodity-to-mining-method lookup for mining missions (see below).
   - `community_goal_state.py` — tracks Community Goal contribution and progress, per commander.
-  - `game_mode.py` — tracks Solo/Open/Private Group status.
   - `update.py` — checks GitHub Releases and self-updates (see below).
   - `ui.py` — renders the EDMC panel.
   - `settings.py` — plugin preferences and configuration.
