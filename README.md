@@ -1,205 +1,134 @@
-# Elite Dangerous: My Mission Manager (EDMMM) — An EDMC Plugin
-
-EDMC plugin that shows every active mission — with detailed kill-progress tracking for stacked massacre/settlement-raid missions.
+# EDMMM — Elite Dangerous: My Mission Manager
 
 [![Release](https://img.shields.io/github/v/release/rwharpernc/EDMMM?sort=semver)](https://github.com/rwharpernc/EDMMM/releases/latest)
+[![Github All Releases](https://img.shields.io/github/downloads/rwharpernc/EDMMM/total.svg)](https://github.com/rwharpernc/EDMMM/releases/latest)
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](LICENSE)
 
-**Author:** R.W. Harper (CMDR Bocheaux) | **License:** GPLv3 (see [LICENSE](LICENSE))
+**Author:** R.W. Harper (CMDR Bocheaux)
 
-## Contents
+EDMMM extends Elite Dangerous Market Connector (EDMC) with a panel showing
+**every active mission** across 8 category pages, with a dedicated,
+detailed kill-progress view for stacked massacre and settlement-raid
+missions. Full offline documentation (settings, logging, troubleshooting)
+ships inside the plugin folder at [EDMMM/README.md](EDMMM/README.md); see
+[TODO.md](TODO.md) for what's still being explored.
 
-- [Requirement](#requirement)
-- [What is EDMMM?](#what-is-edmmm)
-- [Installation](#installation)
-  - [Windows (Steam, Frontier Launcher, or Epic)](#windows-steam-frontier-launcher-or-epic)
-  - [Linux (Steam with Proton)](#linux-steam-with-proton)
-- [Usage](#usage)
-- [Features](#features)
-  - [Navigation](#navigation)
-  - [Pages 1–2: Massacre (Space) \& Settlement Raids (Ground)](#pages-12-massacre-space--settlement-raids-ground)
-  - [Pages 3–7: All Other Missions](#pages-37-all-other-missions)
-  - [Page 8: Community Goals](#page-8-community-goals)
-  - [Header \& General](#header--general)
-  - [Auto-update](#auto-update)
-  - [Settings](#settings)
-- [How kill progress is estimated](#how-kill-progress-is-estimated)
-- [For Developers](#for-developers)
-- [More info](#more-info)
-- [Acknowledgements](#acknowledgements)
-- [License](#license)
+Please report issues on [GitHub](https://github.com/rwharpernc/EDMMM/issues).
 
-## Requirement
+## Key Features
 
-**[EDMarketConnector (EDMC)](https://github.com/EDCD/EDMarketConnector) must already be installed and running.** EDMMM is a plugin for EDMC, not a standalone application — it cannot function without it.
+- Tracks **every active mission** across 8 category pages: Massacre
+  (Space), Settlement Raids (Ground), Combat, Trade & Mining, Passenger,
+  Covert / On-Foot Ops, Other, and Community Goals — only active missions
+  are shown, and a category is skipped entirely when empty.
+- **Massacre & Settlement Raid pages** estimate kill progress per
+  mission-giver faction for stacked missions (the game only confirms kills
+  on single-mission completion, not stacks), with a delta column showing
+  how far each faction is from the current leading stack.
+- **Trade & Mining page** adds a "Mine via: ..." extraction-method hint on
+  mining missions and a "Commodities needed" summary totaling outstanding
+  Collect/Mining requirements.
+- **"All" window** — a live, wide table listing every active mission
+  across every category at once, not limited to EDMC's narrow panel width.
+- Click any mission card for a detail popup (exact reward, Wing status,
+  accepted/expiry times); it closes itself once that mission is no longer
+  active.
+- Alt-friendly: every commander's missions, kills, and progress are
+  tracked separately, and switching commanders in EDMC switches the whole
+  panel with them.
+- Collapsible header and remembered page selection, both persisted across
+  restarts. Theme-aware — respects EDMC's light and dark themes.
+- Reads the last two weeks of journal history on first startup, so
+  missions and kills already in progress are recovered rather than
+  starting from zero.
+- Optional opt-in auto-update (off by default) — see
+  [Network access disclosure](#network-access-disclosure).
 
-## What is EDMMM?
+## Requirements
 
-EDMMM displays **all your active missions in one place** — with a specialized view for massacre missions that tracks your kill progress in detail. Every commander's missions, kills, and progress are tracked separately, so it's **alt-friendly**: switch commanders in EDMC and the whole panel switches with you.
+- [Elite Dangerous Market Connector (EDMC)](https://github.com/EDCD/EDMarketConnector),
+  installed and running. EDMMM is a plugin for EDMC, not a standalone
+  application — it cannot function without it.
 
 ## Installation
 
-1. **Download** the latest `EDMMM-vX.Y.Z.zip` from the [Releases page](https://github.com/rwharpernc/EDMMM/releases/latest).
-2. **Unzip it** to a temporary folder.
-3. **Copy the `EDMMM` folder** into your EDMC plugins folder (see platform instructions below).
-4. **Restart EDMC** — the plugin will start automatically.
-5. **Find the settings** in EDMC: File → Settings → **EDMMM** tab.
+1. Open EDMC and choose `File → Settings → Plugins`, then click *Open
+   Plugins Folder* to reveal your plugins directory (usually
+   `%LOCALAPPDATA%\EDMarketConnector\plugins` on Windows).
+2. Download the latest `EDMMM-vX.Y.Z.zip` from the
+   [Releases page](https://github.com/rwharpernc/EDMMM/releases/latest)
+   and unzip it. Do **not** download individual files — keep the `EDMMM`
+   folder structure intact.
+3. Move the extracted `EDMMM` folder into the plugins directory, removing
+   any older copy first if one exists.
+4. Restart EDMC. The plugin's settings tab appears under
+   `File → Settings → EDMMM`, and its panel joins EDMC's main window.
 
-### Windows (Steam, Frontier Launcher, or Epic)
+_To update manually, replace the `EDMMM` folder's contents with the new
+release and restart EDMC — or turn on auto-update (see below)._
 
-1. Open EDMC and go to: **File → Settings → Plugins tab → *Open* the plugins folder**.
-   - This opens your EDMC plugins folder directly (usually `%LOCALAPPDATA%\EDMarketConnector\plugins`).
-2. Paste the `EDMMM` folder there.
-3. Restart EDMC.
+**Linux (Steam/Proton):** Elite Dangerous and EDMC both run here via Steam
+Play (Proton) or EDMC's Flatpak. If EDMC doesn't auto-detect your journal
+files, point it at your journal folder via
+`File → Settings → Configuration`, then use the *Open Plugins Folder*
+button rather than typing a path by hand — a Flatpak install keeps
+plugins in its own sandboxed data directory.
 
-**Note:** Installation is identical across all Windows storefronts — it doesn't matter if you own Elite Dangerous on Steam, Epic, or from Frontier.
+## First Run & Configuration
 
-**All paths below assume a default install.** If you installed EDMC (or Elite Dangerous, or your Steam library) to a custom location, your actual paths will differ — always prefer the **Open the plugins folder** button and EDMC's own journal-path setting over typing a path by hand.
+- The panel appears in EDMC's main window automatically once the plugin
+  is installed — no setup required to start tracking.
+- Start EDMC before (or with) the game so mission/kill events reach it
+  live. If you start EDMC while already in-game, go to the main menu and
+  back to the game once so it emits a fresh mission list.
+- Use the plugin preferences (`File → Settings → EDMMM`) to toggle kill
+  progress bars, the delta column, the sum row, the mission count badge,
+  the target settlement list, and the commodities-needed summary.
+- The same tab shows the installed version (a link to the Releases page)
+  and the location of the plugin's log file.
+- Click the panel header to collapse it to just the title; use ◂ / ▸ to
+  page between categories. Both states persist across restarts.
 
-### Linux (Steam with Proton)
+## Using the Plugin
 
-Elite Dangerous and EDMC don't have native Linux clients, but both run well through Steam/Wine.
+- Missions appear and disappear from the panel automatically as you
+  accept, hand in, abandon, or fail them — nothing to refresh by hand.
+- Click **"All"** next to the page arrows for a live, wide table of every
+  active mission at once; click any row to open that mission's detail
+  window.
+- On the Massacre/Settlement Raid pages, kill progress is an estimate
+  based on claimed bounties and may be off by 1–2 kills in edge cases —
+  mission completion always corrects it.
 
-1. If EDMC doesn't auto-detect your journal files, tell it where they are:
-   - Under Proton, they're usually at: `~/.steam/steam/steamapps/compatdata/359320/pfx/drive_c/users/steamuser/Saved Games/Frontier Developments/Elite Dangerous`
-   - This assumes the default Steam library location — if Elite Dangerous is installed under a different Steam library (e.g. a second drive), `compatdata/359320` will be under that library's `steamapps` folder instead.
-   - In EDMC: **File → Settings → Configuration tab** — set the journal path there.
+## Support
 
-2. Open EDMC: **File → Settings → Plugins tab → *Open* the plugins folder**.
-   - **Use the button**, not a hardcoded path — Flatpak and Wine keep plugin folders in different places, and the button always opens the right one.
+Questions, ideas, or bugs? Open an issue on
+[GitHub](https://github.com/rwharpernc/EDMMM/issues).
 
-3. Paste the `EDMMM` folder there.
+*EDMMM is a community project and is not affiliated with Frontier
+Developments or the EDCD team.*
 
-4. Restart EDMC.
+## Network access disclosure
 
-## Usage
+EDMMM makes exactly one kind of outbound network call, and only if you
+opt in:
 
-1. **Start EDMC before or with the game** — the plugin reads your missions from EDMC's normal startup process.
-2. **If you start EDMC while in-game**: go to the main menu and back to the game. This tells the game to emit a fresh mission list so EDMMM can read it.
-3. **On first startup**, EDMMM reads the last two weeks of your journal files to recover missions and kills you completed before the plugin was installed. This takes a few seconds and happens automatically.
+- **GitHub**, to check whether a newer release exists (once per EDMC
+  start, only if "Automatically download updates" is enabled in
+  Settings — off by default) and to download the release `.zip` if one
+  is found. No telemetry, no mission or kill data is ever sent anywhere.
 
-## Features
+All mission, kill, and Community Goal tracking is entirely local: it
+reads live journal events (and the last two weeks of history on first
+startup) from Elite Dangerous while EDMC runs, and nothing about it
+leaves your machine.
 
-Several new features are currently under research and design — see
-[TODO.md](TODO.md) for what's being explored.
+## Developer Documentation
 
-### Navigation
+Want to modify EDMMM, run it from source, or submit a pull request?
 
-- The plugin adds a panel to EDMC showing your missions, plus Community Goal progress, across **8 category pages**. Use the ◂ / ▸ arrows to page between them — empty categories are automatically skipped.
-- **All** — click the "All" link next to the page arrows to open a separate window listing every active mission across every category at once, in a wide table (not limited to EDMC's narrow panel width). It stays live while open, and clicking any row opens that mission's detail window (see below).
-- **Only active missions are ever shown** — the moment you hand in, abandon, or fail a mission, it drops off the panel. Nothing lingers after it's no longer active.
-- If you have no missions assigned at all, the panel shows a message saying so instead of the page selector.
-- **Remembers your page** — the category you were viewing is restored when you restart EDMC.
-- A category page with a lot of missions scrolls (mouse wheel) instead of growing the EDMC window indefinitely.
-
-### Pages 1–2: Massacre (Space) & Settlement Raids (Ground)
-
-**Detailed kill-progress views for combat stacking.**
-
-These two pages track the *same* underlying mission type — one with a kill count against a target faction — split by where the killing happens: **Massacre (Space)** is ship kills, **Settlement Raids (Ground)** is the on-foot version (raiding an Odyssey settlement). They're kept on separate pages because ship kills and on-foot kills stack independently in-game.
-
-- Lists every massacre mission or settlement raid you have stacked, on whichever of the two pages matches how it's fought.
-- Per mission-giver faction: **required kills**, **estimated progress**, and **reward** (with the wing-shareable portion shown in brackets for missions accepted with a wing).
-- A **delta column** shows how many kills separate each faction's stack from the current highest stack, so you know which to prioritize while hunting.
-- The Ground page also lists the target settlements and warns you if multiple missions target different factions or star systems in the same stack (that's usually a problem).
-- A faction's stack is marked **⚠ Illegal** if any mission in it is flagged illegal by the game — the same marker Pages 3–7 use, just applied per-stack instead of per-mission since one row can bundle several stacked missions.
-- Kill progress is an estimate based on the bounties you've claimed — it updates live as you hunt.
-
-### Pages 3–7: All Other Missions
-
-**Organized by type for quick scanning.**
-
-- **Combat** — assassinations, black ops, piracy and Thargoid-related missions, megaship disables, skimmer clearing, and other non-massacre combat missions.
-- **Trade & Mining** — delivery, courier, collection, mining, and salvage missions. Mining missions get an extra **"Mine via: ..."** line naming which extraction method(s) — Core, Laser Surface, Sub-surface Deposit — the target commodity typically comes from (a best-effort community-sourced hint, not a mission field, so a handful of rare minerals list more than one method rather than guess). The page also opens with a **"Commodities needed"** summary totaling how much of each commodity your active Collect/Mining missions still require — a plain Delivery mission's cargo is already in hand from acceptance, so it isn't counted.
-- Colonisation missions are deliberately not shown anywhere on the panel.
-- **Passenger** — VIP, bulk, sightseeing, evacuation, and prisoner-transport missions.
-- **Covert / On-Foot Ops** — hacking, sabotage, heists, and other on-foot missions that aren't settlement raids.
-- **Other** — anything that doesn't fit the above (a handful of obscure or new mission types may land here until their naming pattern is recognized).
-
-Each mission shows: giver faction, status (**Pending** or **✓ Complete** — complete once the game confirms the objective is done), the location to go to (the new turn-in location once complete, otherwise the original destination), reward, and time until expiry (soonest-expiring first). Missions the game flags as **illegal** are marked so you know which ones break laws.
-
-**Click any mission's card** to open a detail window with everything the compact card has no room for: exact reward, Wing status, and the accepted/expiry dates and times. It stays live while open, and closes on its own if that mission is handed in, abandoned, or expires.
-
-**Wing missions** (Wing Mining, Wing Trading, Wing Massacre, etc.) are tracked and categorized the same as any other mission, but the wing-shareable reward split is currently only displayed on the Massacre & Settlement Raids pages above — pages 3–7 show the full reward with no wing indicator.
-
-### Page 8: Community Goals
-
-Not a mission — Community Goals aren't accepted, they never appear in a `MissionAccepted` event, and they don't count toward your 20-mission cap. It still gets its own page because it's an ongoing group effort with a progress bar, the same shape as a mission stack even though the underlying game system is different.
-
-- **Community Goals** — one card per CG the game has told you about that hasn't expired yet: your personal contribution, the community's tier reached (out of the top tier), your credit reward at that tier, a **🏆 Top rank** badge if you're in the leaderboard, and time left. A CG the game reports as already past its deadline drops off this page on its own — there's no dismiss button, since the game never sends an explicit "this CG is over" signal either.
-
-### Header & General
-
-- **Header shows the plugin's name and total mission count** (x/20 — the game's limit). Click the header to collapse the panel down to just that line — handy if you want the rest of EDMC's window uncluttered for a while. Collapsed state is remembered across restarts.
-- **Per-commander profiles** — each commander's missions, kills, and progress are tracked separately; switching commanders switches the entire view. This is what makes EDMMM alt-friendly.
-- **All mission/kill/Community Goal tracking is offline** — that data only ever comes from your local journal files and nothing about it is sent anywhere. The one exception is auto-update, an opt-in check against GitHub Releases (off by default); see below.
-- **Theme-aware** — the panel respects EDMC's light and dark themes, so it's readable no matter which one you use.
-- **Its own rotating log file**, separate from EDMC's, so plugin issues can be diagnosed without digging through EDMC's log.
-
-### Auto-update
-
-**Off by default.** Turn on "Automatically download updates" in Settings (below) if you want it: once per EDMC start, the plugin then checks GitHub for a newer release and, if one exists, downloads and stages it automatically — nothing is sent in that request beyond the request itself (no telemetry, no journal data). The staged files only take effect the next time you restart EDMC; nothing is overwritten while EDMC is running.
-
-- The plugin version lives only in the Settings tab (a clickable link to the [Releases page](https://github.com/rwharpernc/EDMMM/releases/latest)) — the main panel stays silent about it except for one thing: right after a staged update takes effect, the header briefly shows "Updated to vX.Y.Z" for a few seconds, then goes back to showing nothing there.
-- Leave it off (the default) to update manually via that same Releases page instead.
-
-### Settings
-
-The plugin's options tab is in EDMC under **File → Settings → EDMMM**. It has a checkbox for each of these:
-
-- Kill progress bars *(on by default)*
-- Delta column *(on by default)*
-- Sum row (per-faction totals on the massacre pages) *(on by default)*
-- Mission count badge *(on by default)*
-- Target settlement list (Ground page) *(on by default)*
-- Commodities needed summary (Trade & Mining page) *(on by default)*
-- Automatically download updates *(off by default — see [Auto-update](#auto-update) above)*
-
-The tab also shows the installed plugin version — a clickable link to the Releases page — and the location of its log file.
-
-## How kill progress is estimated
-
-Massacre/ground raid pages show estimated kill counts because Elite Dangerous doesn't send explicit "kill complete" signals for stacked missions — only when a single mission finishes.
-
-- When you claim a bounty, it counts toward the earliest incomplete mission from each faction you're stacked with.
-- On-foot kills are tracked separately from ship kills (they only count toward ground missions, and vice versa).
-- When you complete a mission, the game confirms it — EDMMM updates immediately.
-
-**The estimate may be off by 1–2 kills in edge cases** (anarchy settlements, or weird kill-credit situations), but mission completion always corrects it.
-
-## For Developers
-
-The instructions above are for players who just want to run the plugin. If you want to modify EDMMM, run it from source, or submit a pull request, you'll need a local dev setup instead of the zip from Releases.
-
-Quick start:
-
-```powershell
-# from the repo root
-python scripts/build.py
-
-# then drop dist/EDMMM into your EDMC plugins folder and restart EDMC
-```
-
-This reads `EDMMM/version`, copies the plugin into `dist/EDMMM/`, and also writes `dist/EDMMM-vX.Y.Z.zip` (the same artifact the release workflow publishes). `dist/` is gitignored, so regenerate it any time with the command above.
-
-There's no unit-test suite outside EDMC (`config`, `theme`, and `myNotebook` are EDMC-only modules that aren't installable standalone) — **always test changes against a running copy of EDMC before opening a PR.**
-
-For the full picture — code structure, mission-category detection, cutting a release, and CI — see [CONTRIBUTING.md](CONTRIBUTING.md). For the architecture and data flow under the hood, see [TECHNICAL_SPEC.md](TECHNICAL_SPEC.md).
-
-## More info
-
-Full documentation (settings, logging, troubleshooting) is in [EDMMM/README.md](EDMMM/README.md), which also ships inside the plugin folder so you can read it offline.
-
-## Acknowledgements
-
-See [docs/ATTRIBUTIONS.md](docs/ATTRIBUTIONS.md) for the other projects and community resources that inspired specific EDMMM features.
-
-## License
-
-GPL-3.0 — see [LICENSE](LICENSE).
-
----
-
-**Found a bug or have a suggestion?** Open an issue on [GitHub](https://github.com/rwharpernc/EDMMM/issues).
-
-**Want to contribute code?** See [CONTRIBUTING.md](CONTRIBUTING.md).
+- [CONTRIBUTING.md](CONTRIBUTING.md) — code structure, testing locally, and the release process.
+- [TECHNICAL_SPEC.md](TECHNICAL_SPEC.md) — architecture and data flow.
+- [TODO.md](TODO.md) — planned work and open backlog items.
+- [docs/ATTRIBUTIONS.md](docs/ATTRIBUTIONS.md) — third-party references that inspired specific features.
+- [EDMMM/README.md](EDMMM/README.md) — the fuller, offline reference (settings, logging, troubleshooting, file access) that ships inside the plugin folder.
